@@ -1,0 +1,139 @@
+generator client {
+    provider = "prisma-client-js"
+    output   = "../src/generated/prisma"
+}
+
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id           Int       @id @default(autoincrement())
+    kakaoId      String    @unique // 카카오 user_id
+    nickname     String
+    email        String    @unique
+    imageUrl     String?
+    imageKey     String?
+    birth        DateTime?
+    phone        String?   @db.VarChar(20)
+    region       String?
+    tokenBalance Int       @default(0)
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
+
+    helpRequests    HelpRequest[]     @relation("RequestsByUser")
+    applications    HelpApplication[] @relation("ApplicationsByUser")
+    assignments     HelpAssignment[]  @relation("AssignmentsByHelper")
+    reviewsWritten  Review[]          @relation("ReviewsWritten")
+    reviewsReceived Review[]          @relation("ReviewsReceived")
+    orders          BuyToken[]
+}
+
+model HelpRequest {
+    id           Int      @id @default(autoincrement())
+    requesterId  Int
+    helpType     Int // 1: 등하원, 2: 놀이, 3: 동행, 4: 기타
+    startAt      DateTime
+    endAt        DateTime
+    status       Int      @default(0) // 0: 요청, 1: 배정, 2: 완료, 3: 취소
+    addressText  String
+    lat          Decimal? @db.Decimal(10, 7)
+    lng          Decimal? @db.Decimal(10, 7)
+    content      String
+    note         String?
+    imageUrl     String?
+    imageKey     String?
+    rewardTokens Int      @default(0)
+
+    requester    User              @relation("RequestsByUser", fields: [requesterId], references: [id])
+    applications HelpApplication[]
+    assignment   HelpAssignment?
+    reviews      Review[]
+
+    @@index([status, startAt])
+}
+
+model HelpApplication {
+    id            Int      @id @default(autoincrement())
+    helpRequestId Int
+    userId        Int // helperId
+    status        Int      @default(0) // 0: 대기, 1: 수락, 2: 거절, 3: 철회
+    message       String?
+    createdAt     DateTime @default(now())
+
+    helpRequest HelpRequest     @relation(fields: [helpRequestId], references: [id])
+    helper      User            @relation("ApplicationsByUser", fields: [userId], references: [id])
+    assignment  HelpAssignment?
+
+    @@unique([helpRequestId, userId]) // 같은 글에 한 번만 지원
+    @@index([helpRequestId, status])
+    @@index([userId, status])
+}
+
+model HelpAssignment {
+    id                Int      @id @default(autoincrement())
+    helpRequestId     Int      @unique // 요청당 1명 보장
+    helpApplicationId Int      @unique
+    helperId          Int
+    createdAt         DateTime @default(now())
+
+    helpRequest HelpRequest     @relation(fields: [helpRequestId], references: [id])
+    application HelpApplication @relation(fields: [helpApplicationId], references: [id])
+    helper      User            @relation("AssignmentsByHelper", fields: [helperId], references: [id])
+    reviews     Review[]
+}
+
+model Review {
+    id         Int      @id @default(autoincrement())
+    helpId     Int
+    reviewerId Int // 작성자
+    revieweeId Int // 대상(상대)
+    rating     Int
+    content    String?
+    createdAt  DateTime @default(now())
+
+    helpRequest      HelpRequest     @relation(fields: [helpId], references: [id])
+    reviewer         User            @relation("ReviewsWritten", fields: [reviewerId], references: [id])
+    reviewee         User            @relation("ReviewsReceived", fields: [revieweeId], references: [id])
+    HelpAssignment   HelpAssignment? @relation(fields: [helpAssignmentId], references: [id])
+    helpAssignmentId Int?
+
+    @@unique([helpId, reviewerId]) // 한 건당 1회
+    @@index([revieweeId, createdAt])
+}
+
+model TokenStore {
+    id       Int     @id @default(autoincrement())
+    name     String
+    price    Int
+    imageUrl String?
+
+    orders BuyToken[]
+}
+
+model BuyToken {
+    id              Int       @id @default(autoincrement())
+    userId          Int
+    tokenStoreId    Int
+    quantity        Int       @default(1)
+    unitPrice       Int
+    totalPrice      Int
+    status          Int       @default(0) // 0: 대기, 1: 결제완료, 2: 실패, 3: 환불
+    paymentProvider String?
+    paymentKey      String?
+    paidAt          DateTime?
+    createdAt       DateTime  @default(now())
+
+    user    User       @relation(fields: [userId], references: [id])
+    product TokenStore @relation(fields: [tokenStoreId], references: [id])
+
+    @@index([userId, createdAt])
+}
+
+model Session {
+    id        String   @id
+    sid       String   @unique
+    data      String   @db.MediumText
+    expiresAt DateTime
+}

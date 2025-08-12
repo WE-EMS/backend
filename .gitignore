@@ -2,3 +2,5 @@
 .env
 
 /prisma/migration
+src/generated
+/node_modules
