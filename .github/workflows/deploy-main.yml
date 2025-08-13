@@ -2,42 +2,30 @@ name: deploy-main
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Configure SSH
-        shell: bash
         run: |
-          set -euo pipefail
-
           mkdir -p ~/.ssh
-          printf "%s" "${EC2_SSH_KEY}" > ~/.ssh/id_rsa
+          echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-          # 호스트 키 미리 등록(안 되면 그냥 넘어감)
-          ssh-keyscan -T 5 -H "${EC2_HOST}" >> ~/.ssh/known_hosts 2>/dev/null || true
-
-
-          # SSH config (반드시 run: 블록 안에서 전부 들여쓰기 유지)
-          cat > ~/.ssh/config <<'EOF'
+          cat >>~/.ssh/config <<END
           Host jogakdolbom
-            HostName __EC2_HOST__
-            User __EC2_USER__
+            HostName $EC2_HOST
+            User $EC2_USER
             IdentityFile ~/.ssh/id_rsa
             StrictHostKeyChecking no
-          EOF
-
-          # 자리표시자 치환
-          sed -i "s/__EC2_HOST__/${EC2_HOST}/" ~/.ssh/config
-          sed -i "s/__EC2_USER__/${EC2_USER}/" ~/.ssh/config
+          END
         env:
           EC2_USER: ubuntu
           EC2_HOST: ${{ secrets.EC2_HOST }}
@@ -45,7 +33,8 @@ jobs:
 
       - name: Copy Workspace
         run: |
-          ssh jogakdolbom 'sudo mkdir -p /opt/app && sudo chown ubuntu:ubuntu /opt/app'
+          ssh jogakdolbom 'sudo mkdir -p /opt/app'
+          ssh jogakdolbom 'sudo chown ubuntu:ubuntu /opt/app'
           scp -r ./[!.]* jogakdolbom:/opt/app
 
       - name: Install dependencies
@@ -56,23 +45,23 @@ jobs:
         run: |
           ssh jogakdolbom '
             echo "[Unit]
-            Description=EMS Project
+            Description=WE-EMS
             After=network.target
 
             [Service]
-            User=ubuntu
+            User=${USER}
             ExecStart=/usr/bin/npm run dev --prefix /opt/app/
             Restart=always
-            WorkingDirectory=/opt/app
 
             [Install]
-            WantedBy=multi-user.target" | sudo tee /etc/systemd/system/app.service >/dev/null
+            WantedBy=multi-user.target" | sudo tee /etc/systemd/system/app.service
           '
 
       - name: Enable systemd service
         run: |
-          ssh jogakdolbom 'sudo systemctl daemon-reload && sudo systemctl enable app'
+          ssh jogakdolbom 'sudo systemctl daemon-reload'
+          ssh jogakdolbom 'sudo systemctl enable app'
 
       - name: Restart systemd service
         run: |
-          ssh jogakdolbom 'sudo systemctl restart app && sudo systemctl status --no-pager app || true'
+          ssh jogakdolbom 'sudo systemctl restart app'
