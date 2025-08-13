@@ -10,7 +10,7 @@ export const swaggerOptions = {
         // 🔹 Swagger 서버 목록 (로컬 + EIP)
         servers: [
             { url: 'http://localhost:3000', description: '개발 서버' },
-            { url: 'http://52.79.147.143', description: '프로덕션(임시 IP)' }
+            { url: 'https://www.jogakdolbom.site/', description: '라이브 서버' }
         ],
         components: {
             securitySchemes: {
