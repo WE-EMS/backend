@@ -1,6 +1,6 @@
 # 환경변수 설정
 .env
 
-/prisma/migration
+/prisma/migrations
 src/generated
 /node_modules
