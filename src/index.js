@@ -161,9 +161,10 @@ app.get("/oauth-success", (req, res) => {
             <body>
                 <h1 class="success">✅ 카카오 로그인 성공!</h1>
                 <p>JWT 토큰이 발급되었습니다:</p>
+                <p>(테스트 진행시 아래 토큰을 복사 및 인증 후에 사용하세요)</p>
                 <div class="token">${token}</div>
                 <p><a href="/auth/me">내 정보 확인하기 (Authorization 헤더 필요)</a></p>
-                <p><a href="/">메인 페이지로</a></p>
+                <p><a href="/docs">메인 페이지로</a></p>
                 
                 <script>
                     // 토큰을 로컬스토리지에 저장 (테스트용)
@@ -241,7 +242,6 @@ app.use((req, res) => {
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
     console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
-    console.log(`📚 API Documentation: http://localhost:${port}/docs`);
     if (!jwtSecret) {
         console.log("⚠️  WARNING: Using default JWT secret. Set JWT_SECRET in .env file for production!");
     }
