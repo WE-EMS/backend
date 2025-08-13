@@ -91,10 +91,12 @@ import { AuthResponseDto } from "./dto/auth.response.dto.js";
  *         description: "로그아웃 완료"
  */
 
-const getRedirectUri = () =>
-    process.env.NODE_ENV === 'production'
+const getRedirectUri = () => {
+    const uri = process.env.NODE_ENV === 'production'
         ? process.env.KAKAO_REDIRECT_URI_PROD
         : process.env.KAKAO_REDIRECT_URI_DEV;
+    return uri;
+};
 
 const getFrontendBase = () =>
     process.env.NODE_ENV === 'production'
