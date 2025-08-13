@@ -22,8 +22,9 @@ jobs:
           printf "%s" "${EC2_SSH_KEY}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-          # 호스트 키 미리 등록(안전)
-          ssh-keyscan -H "${EC2_HOST}" >> ~/.ssh/known_hosts 2>/dev/null
+          # 호스트 키 미리 등록(안 되면 그냥 넘어감)
+          ssh-keyscan -T 5 -H "${EC2_HOST}" >> ~/.ssh/known_hosts 2>/dev/null || true
+
 
           # SSH config (반드시 run: 블록 안에서 전부 들여쓰기 유지)
           cat > ~/.ssh/config <<'EOF'
