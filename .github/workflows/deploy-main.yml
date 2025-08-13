@@ -2,9 +2,8 @@ name: deploy-main
 
 on:
   push:
-    branches:
-      - main  # main 브랜치에 새로운 커밋이 올라왔을 때 실행
-  workflow_dispatch:  # 수동 실행 가능
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -15,27 +14,29 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure SSH
+        shell: bash
         run: |
+          set -euo pipefail
+
           mkdir -p ~/.ssh
           printf "%s" "${EC2_SSH_KEY}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-          # 호스트 키 미리 등록 (StrictHostKeyChecking no 대신 안전)
+          # 호스트 키 미리 등록(안전)
           ssh-keyscan -H "${EC2_HOST}" >> ~/.ssh/known_hosts 2>/dev/null
 
-          # SSH config 작성 (들여쓰기 없이 heredoc 종료)
+          # SSH config (반드시 run: 블록 안에서 전부 들여쓰기 유지)
           cat > ~/.ssh/config <<'EOF'
-Host jogakdolbom
-  HostName __EC2_HOST__
-  User __EC2_USER__
-  IdentityFile ~/.ssh/id_rsa
-  StrictHostKeyChecking no
-EOF
+          Host jogakdolbom
+            HostName __EC2_HOST__
+            User __EC2_USER__
+            IdentityFile ~/.ssh/id_rsa
+            StrictHostKeyChecking no
+          EOF
 
-          # 변수 치환
+          # 자리표시자 치환
           sed -i "s/__EC2_HOST__/${EC2_HOST}/" ~/.ssh/config
           sed -i "s/__EC2_USER__/${EC2_USER}/" ~/.ssh/config
-
         env:
           EC2_USER: ubuntu
           EC2_HOST: ${{ secrets.EC2_HOST }}
@@ -58,19 +59,19 @@ EOF
             After=network.target
 
             [Service]
-            User=${USER}
+            User=ubuntu
             ExecStart=/usr/bin/npm run dev --prefix /opt/app/
             Restart=always
+            WorkingDirectory=/opt/app
 
             [Install]
-            WantedBy=multi-user.target" | sudo tee /etc/systemd/system/app.service
+            WantedBy=multi-user.target" | sudo tee /etc/systemd/system/app.service >/dev/null
           '
 
       - name: Enable systemd service
         run: |
-          ssh jogakdolbom 'sudo systemctl daemon-reload'
-          ssh jogakdolbom 'sudo systemctl enable app'
+          ssh jogakdolbom 'sudo systemctl daemon-reload && sudo systemctl enable app'
 
       - name: Restart systemd service
         run: |
-          ssh jogakdolbom 'sudo systemctl restart app
+          ssh jogakdolbom 'sudo systemctl restart app && sudo systemctl status --no-pager app || true'
