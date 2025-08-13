@@ -136,6 +136,45 @@ app.get("/dashboard", (req, res) => {
     });
 });
 
+// 임시 OAuth 성공 페이지 (프론트엔드가 없을 때 테스트용)
+app.get("/oauth-success", (req, res) => {
+    const { token } = req.query;
+
+    if (!token) {
+        return res.status(400).json({
+            resultType: "FAIL",
+            error: { errorCode: "NO_TOKEN", reason: "토큰이 없습니다.", data: null },
+            success: null
+        });
+    }
+
+    res.send(`
+        <html>
+            <head>
+                <title>로그인 성공</title>
+                <style>
+                    body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+                    .token { background: #f5f5f5; padding: 10px; border-radius: 5px; word-break: break-all; margin: 10px 0; }
+                    .success { color: #28a745; font-size: 24px; margin-bottom: 20px; }
+                </style>
+            </head>
+            <body>
+                <h1 class="success">✅ 카카오 로그인 성공!</h1>
+                <p>JWT 토큰이 발급되었습니다:</p>
+                <div class="token">${token}</div>
+                <p><a href="/auth/me">내 정보 확인하기 (Authorization 헤더 필요)</a></p>
+                <p><a href="/">메인 페이지로</a></p>
+                
+                <script>
+                    // 토큰을 로컬스토리지에 저장 (테스트용)
+                    localStorage.setItem('accessToken', '${token}');
+                    console.log('Token saved to localStorage:', '${token}');
+                </script>
+            </body>
+        </html>
+    `);
+});
+
 /**
  * @swagger
  * /:
