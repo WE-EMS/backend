@@ -31,8 +31,8 @@ export const requireAuth = async (req, res, next) => {
                 });
             }
 
-            // 일반 페이지 요청인 경우 로그인 페이지로 리다이렉트
-            return res.redirect('/auth/kakao');
+            // 일반 페이지 요청인 경우 로그인 페이지로 리다이렉트 (새 경로)
+            return res.redirect('/api/auth/kakao');
         }
 
         const user = await authService.getUserFromToken(token);
@@ -50,7 +50,7 @@ export const requireAuth = async (req, res, next) => {
             });
         }
 
-        res.redirect('/auth/kakao');
+        res.redirect('/api/auth/kakao');
     }
 };
 
