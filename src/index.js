@@ -2,13 +2,12 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import cookieParser from "cookie-parser";
+import { prisma } from "./db.config.js";
 import swaggerUiExpress from "swagger-ui-express";
 import { swaggerSpec } from "./swagger/swaggerSpec.js";
 
 // dotenv를 가장 먼저 로드
 dotenv.config();
-
-import { prisma } from "./db.config.js"; // (필요 없으면 삭제해도 됨)
 
 // Auth 모듈 임포트
 import { authRoutes } from "./auth/auth.route.js";
@@ -67,7 +66,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// ===== Swagger =====
 // OpenAPI JSON
 app.get("/docs/openapi.json", (req, res) => {
     res.setHeader("Content-Type", "application/json");
@@ -83,7 +81,7 @@ app.use(
         customCss: ".swagger-ui .topbar { display: none }",
         customSiteTitle: "WE-EMS API Docs",
         swaggerOptions: {
-            docExpansion: "none",
+            docExpansion: "list",
             filter: true,
             showRequestDuration: true,
             defaultModelsExpandDepth: 2,
@@ -91,89 +89,16 @@ app.use(
         },
     })
 );
-// ====================
 
 // Auth 라우트 연결
-app.use("/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 
 // 기존 카카오 로그인 라우트 (호환성을 위해 유지)
 app.get("/oauth2/login/kakao", (req, res) => {
-    res.redirect("/auth/kakao");
+    res.redirect("/api/auth/kakao");
 });
-
 app.get("/oauth2/callback/kakao", (req, res) => {
-    res.redirect("/auth/oauth2/callback/kakao");
-});
-
-/**
- * @swagger
- * /dashboard:
- *   get:
- *     tags:
- *       - General
- *     summary: 대시보드 페이지
- *     description: 로그인한 사용자의 대시보드 페이지입니다.
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: 대시보드 정보
- *       302:
- *         description: 미인증 시 로그인 페이지로 리다이렉트
- */
-app.get("/dashboard", (req, res) => {
-    if (!req.user) {
-        return res.redirect("/auth/kakao");
-    }
-
-    res.success({
-        message: "대시보드에 오신 것을 환영합니다!",
-        user: {
-            id: req.user.id,
-            nickname: req.user.nickname,
-            email: req.user.email,
-        },
-    });
-});
-
-// 임시 OAuth 성공 페이지 (프론트엔드가 없을 때 테스트용)
-app.get("/oauth-success", (req, res) => {
-    const { token } = req.query;
-
-    if (!token) {
-        return res.status(400).json({
-            resultType: "FAIL",
-            error: { errorCode: "NO_TOKEN", reason: "토큰이 없습니다.", data: null },
-            success: null
-        });
-    }
-
-    res.send(`
-        <html>
-            <head>
-                <title>로그인 성공</title>
-                <style>
-                    body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
-                    .token { background: #f5f5f5; padding: 10px; border-radius: 5px; word-break: break-all; margin: 10px 0; }
-                    .success { color: #28a745; font-size: 24px; margin-bottom: 20px; }
-                </style>
-            </head>
-            <body>
-                <h1 class="success">✅ 카카오 로그인 성공!</h1>
-                <p>JWT 토큰이 발급되었습니다:</p>
-                <p>(테스트 진행시 아래 토큰을 복사 및 인증 후에 사용하세요)</p>
-                <div class="token">${token}</div>
-                <p><a href="/auth/me">내 정보 확인하기 (Authorization 헤더 필요)</a></p>
-                <p><a href="/docs">메인 페이지로</a></p>
-                
-                <script>
-                    // 토큰을 로컬스토리지에 저장 (테스트용)
-                    localStorage.setItem('accessToken', '${token}');
-                    console.log('Token saved to localStorage:', '${token}');
-                </script>
-            </body>
-        </html>
-    `);
+    res.redirect("/api/auth/oauth2/callback/kakao");
 });
 
 /**
@@ -196,18 +121,14 @@ app.get("/", (req, res) => {
         res.success({
             message: "Hello World! 로그인된 사용자입니다!",
             user: {
-                id: req.user.id,
                 nickname: req.user.nickname,
                 email: req.user.email,
-                kakaoId: req.user.kakaoId,
-                tokenBalance: req.user.tokenBalance,
-                imageUrl: req.user.imageUrl,
             },
         });
     } else {
         res.success({
             message: "Hello World! 로그인하지 않은 사용자입니다.",
-            loginUrl: "/auth/kakao",
+            loginUrl: "/api/auth/kakao",
         });
     }
 });
