@@ -31,7 +31,7 @@ class AuthService {
         }
     }
 
-    // 카카오 로그인 처리
+    // 카카오 로그인 처리 - 토큰과 사용자 정보 모두 반환
     async handleKakaoLogin(profile) {
         try {
             const email = profile._json.kakao_account?.email;
@@ -50,7 +50,10 @@ class AuthService {
                 imageUrl
             });
 
-            return this.generateTokens(user);
+            const tokens = this.generateTokens(user);
+
+            // 토큰과 사용자 정보 모두 반환
+            return { tokens, user };
         } catch (error) {
             throw error;
         }
