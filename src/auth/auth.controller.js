@@ -23,8 +23,8 @@ import { AuthResponseDto } from "./dto/auth.response.dto.js";
  * /api/auth/oauth2/callback/kakao:
  *   get:
  *     tags: [Authentication]
- *     summary: "카카오 로그인 콜백 처리"
- *     description: "카카오 OAuth 인증 후 콜백을 처리하고 우리 서비스의 JWT를 발급합니다. 토큰을 JSON으로 응답합니다."
+ *     summary: "카카오 로그인 콜백 처리 (GET - 테스트용)"
+ *     description: "카카오에서 리다이렉트된 인증 코드로 JWT를 발급합니다. 테스트용 GET 엔드포인트입니다."
  *     parameters:
  *       - in: query
  *         name: code
@@ -32,6 +32,7 @@ import { AuthResponseDto } from "./dto/auth.response.dto.js";
  *         schema:
  *           type: string
  *         description: "카카오에서 제공하는 인증 코드"
+ *         example: "abc123def456"
  *     responses:
  *       200:
  *         description: "로그인 성공"
@@ -54,11 +55,106 @@ import { AuthResponseDto } from "./dto/auth.response.dto.js";
  *                       example: "로그인이 완료되었습니다."
  *                     accessToken:
  *                       type: string
- *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                       example: "AccessToken..."
  *                     expiresAt:
  *                       type: string
  *                       format: date-time
- *                       example: "2025-08-22T15:30:00.000Z"
+ *                       example: "2025-08-23T15:14:04.456Z"
+ *                       description: "토큰 만료 시간 (ISO 8601 형식)"
+ *       400:
+ *         description: "잘못된 요청 (code 없음 등)"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultType:
+ *                   type: string
+ *                   example: "FAIL"
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     errorCode:
+ *                       type: string
+ *                       example: "NO_AUTH_CODE"
+ *                     reason:
+ *                       type: string
+ *                       example: "인증 코드가 없습니다."
+ *                     data:
+ *                       type: null
+ *                       example: null
+ *                 success:
+ *                   type: null
+ *                   example: null
+ *       500:
+ *         description: "내부 서버 오류"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultType:
+ *                   type: string
+ *                   example: "FAIL"
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     errorCode:
+ *                       type: string
+ *                       example: "KAKAO_LOGIN_FAILED"
+ *                     reason:
+ *                       type: string
+ *                       example: "카카오 로그인 처리 중 오류가 발생했습니다."
+ *                     data:
+ *                       type: null
+ *                       example: null
+ *                 success:
+ *                   type: null
+ *                   example: null
+ *   post:
+ *     tags: [Authentication]
+ *     summary: "카카오 로그인 콜백 처리"
+ *     description: "프론트엔드에서 받은 카카오 인증 코드로 JWT를 발급합니다."
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: "카카오에서 제공하는 인증 코드"
+ *                 example: "abc123def456"
+ *     responses:
+ *       200:
+ *         description: "로그인 성공"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultType:
+ *                   type: string
+ *                   example: "SUCCESS"
+ *                 error:
+ *                   type: null
+ *                   example: null
+ *                 success:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: "로그인이 완료되었습니다."
+ *                     accessToken:
+ *                       type: string
+ *                       example: "AccessToken..."
+ *                     expiresAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-08-23T15:14:04.456Z"
  *                       description: "토큰 만료 시간 (ISO 8601 형식)"
  *       400:
  *         description: "잘못된 요청 (code 없음 등)"
@@ -356,11 +452,11 @@ import { AuthResponseDto } from "./dto/auth.response.dto.js";
  *                   example: null
  */
 
+// 프론트엔드에서 OAuth 콜백을 받도록 수정된 콜백 URI
 const getRedirectUri = () => {
-    const uri = process.env.NODE_ENV === 'production'
-        ? process.env.KAKAO_REDIRECT_URI_PROD
-        : process.env.KAKAO_REDIRECT_URI_DEV;
-    return uri;
+    return process.env.NODE_ENV === 'production'
+        ? 'https://jogakdolbom.vercel.app/oauth2/kakao'
+        : 'http://localhost:3000/oauth2/kakao';
 };
 
 class AuthController {
@@ -373,10 +469,11 @@ class AuthController {
         res.redirect(kakaoAuthUrl);
     };
 
-    // 카카오 콜백: 토큰만 JSON으로 응답
+    // 카카오 콜백: 프론트에서 code를 POST로 받거나 테스트용 GET으로 받아서 처리
     kakaoCallbackHandler = async (req, res) => {
         try {
-            const { code } = req.query;
+            // POST 방식(body)과 GET 방식(query) 모두 지원
+            const { code } = req.method === 'POST' ? req.body : req.query;
             if (!code) {
                 return res.error({
                     errorCode: "NO_AUTH_CODE",
@@ -415,10 +512,10 @@ class AuthController {
                 _json: userData
             };
 
-            // 3) 우리 서비스 JWT 발급
-            const tokens = await authService.handleKakaoLogin(profile);
+            // 3) 우리 서비스 JWT 발급 및 사용자 정보 가져오기
+            const { tokens, user } = await authService.handleKakaoLogin(profile);
 
-            // 4) JSON 응답으로 토큰만 반환
+            // 4) JSON 응답으로 토큰 정보만 간단히 반환
             res.success({
                 message: "로그인이 완료되었습니다.",
                 accessToken: tokens.accessToken,
