@@ -7,7 +7,10 @@ const router = express.Router();
 // 카카오 로그인 시작
 router.get('/kakao', authController.kakaoLogin);
 
-// 카카오 콜백
+// 카카오 콜백 - 프론트에서 POST로 code 전송받음
+router.post('/oauth2/callback/kakao', authController.kakaoCallbackHandler);
+
+// 테스트용 GET 방식도 추가 (임시)
 router.get('/oauth2/callback/kakao', authController.kakaoCallbackHandler);
 
 // 로그아웃
