@@ -6,7 +6,10 @@ import { prisma } from "./db.config.js";
 import swaggerUiExpress from "swagger-ui-express";
 import { swaggerSpec } from "./swagger/swaggerSpec.js";
 
-// dotenv를 가장 먼저 로드
+// 이미지 업로드
+import { imageUploader } from "./middleware/image.uploader.js";
+import { createUUID } from "./middleware/uuid.js";
+
 dotenv.config();
 
 // Auth 모듈 임포트
@@ -104,6 +107,129 @@ app.get("/oauth2/callback/kakao", (req, res) => {
 /**
  * @swagger
  * /:
+ *   post:
+ *     tags:
+ *       - General
+ *     summary: 이미지 업로드 테스트
+ *     description: 이미지 파일을 업로드하는 테스트 엔드포인트입니다.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: 업로드할 이미지 파일
+ *             required:
+ *               - image
+ *     responses:
+ *       200:
+ *         description: 이미지 업로드 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultType:
+ *                   type: string
+ *                   example: SUCCESS
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *                   example: null
+ *                 success:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: "이미지 업로드 테스트 완료"
+ *                     uploadId:
+ *                       type: string
+ *                       example: "4eeb5f5306fca7ec8a1418ec5dc62a40"
+ *       400:
+ *         description: 파일 업로드 실패
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultType:
+ *                   type: string
+ *                   example: FAIL
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     errorCode:
+ *                       type: string
+ *                       example: FILE_UPLOAD_ERROR
+ *                     reason:
+ *                       type: string
+ *                       example: "지원하지 않는 파일 확장자입니다."
+ *                     data:
+ *                       type: object
+ *                       nullable: true
+ *                 success:
+ *                   type: object
+ *                   nullable: true
+ *                   example: null
+ *       413:
+ *         description: 파일 크기 초과
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultType:
+ *                   type: string
+ *                   example: FAIL
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     errorCode:
+ *                       type: string
+ *                       example: FILE_TOO_LARGE
+ *                     reason:
+ *                       type: string
+ *                       example: "파일 크기가 5MB를 초과합니다."
+ *                     data:
+ *                       type: object
+ *                       nullable: true
+ *                 success:
+ *                   type: object
+ *                   nullable: true
+ *                   example: null
+ */
+app.post("/", imageUploader.single('image'), (req, res, next) => {
+    try {
+        if (!req.file) {
+            return res.error({
+                errorCode: "NO_FILE",
+                reason: "업로드할 파일이 없습니다.",
+                statusCode: 400
+            });
+        }
+
+        // UUID 생성해서 응답에 포함 (업로드 추적용)
+        const uploadId = createUUID();
+
+        // 업로드 성공 로그 (최소 정보만)
+        console.log(`[Upload Success] ID: ${uploadId}`);
+
+        res.success({
+            message: "이미지 업로드 테스트 완료",
+            uploadId: uploadId
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
+ * @swagger
+ * /:
  *   get:
  *     tags:
  *       - General
@@ -115,8 +241,6 @@ app.get("/oauth2/callback/kakao", (req, res) => {
  *         description: 메인 페이지 정보
  */
 app.get("/", (req, res) => {
-    console.log("Current user:", req.user?.nickname || "Guest");
-
     if (req.user) {
         res.success({
             message: "Hello World! 로그인된 사용자입니다!",
@@ -131,6 +255,34 @@ app.get("/", (req, res) => {
             loginUrl: "/api/auth/kakao",
         });
     }
+});
+
+// Multer 에러 처리 미들웨어
+app.use((err, req, res, next) => {
+    if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.error({
+                errorCode: "FILE_TOO_LARGE",
+                reason: "파일 크기가 5MB를 초과합니다.",
+                statusCode: 413
+            });
+        }
+        if (err.code === 'LIMIT_FILE_COUNT') {
+            return res.error({
+                errorCode: "TOO_MANY_FILES",
+                reason: "한 번에 하나의 파일만 업로드할 수 있습니다.",
+                statusCode: 400
+            });
+        }
+        if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+            return res.error({
+                errorCode: "UNEXPECTED_FILE",
+                reason: "예상하지 못한 파일 필드입니다. 'image' 필드를 사용하세요.",
+                statusCode: 400
+            });
+        }
+    }
+    next(err);
 });
 
 // 전역 오류 처리
