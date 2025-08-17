@@ -16,6 +16,9 @@ dotenv.config();
 import { authRoutes } from "./auth/auth.route.js";
 import { injectUser } from "./auth/auth.middleware.js";
 
+// 라우트 연결
+import { usersRoutes } from "./users/users.route.js";
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -93,8 +96,9 @@ app.use(
     })
 );
 
-// Auth 라우트 연결
+// 라우트 연결
 app.use("/api/auth", authRoutes);
+app.use("/api/users", usersRoutes);
 
 // 기존 카카오 로그인 라우트 (호환성을 위해 유지)
 app.get("/oauth2/login/kakao", (req, res) => {
