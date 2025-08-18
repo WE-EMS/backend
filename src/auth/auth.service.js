@@ -37,7 +37,7 @@ class AuthService {
             const email = profile._json.kakao_account?.email;
             const kakaoId = profile.id.toString();
             const nickname = profile.displayName || profile._json.kakao_account?.profile?.nickname || "카카오유저";
-            const imageUrl = profile._json.kakao_account?.profile?.profile_image_url || null;
+            const kakaoProfileImageUrl = profile._json.kakao_account?.profile?.profile_image_url || null;
 
             if (!email) {
                 throw new Error("Kakao: Email not found");
@@ -47,7 +47,7 @@ class AuthService {
                 kakaoId,
                 nickname,
                 email,
-                imageUrl
+                kakaoProfileImageUrl
             });
 
             const tokens = this.generateTokens(user);
@@ -59,7 +59,7 @@ class AuthService {
         }
     }
 
-    async findOrCreateUser({ kakaoId, nickname, email, imageUrl }) {
+    async findOrCreateUser({ kakaoId, nickname, email, kakaoProfileImageUrl }) {
         // 먼저 kakaoId로 찾기
         let user = await prisma.user.findUnique({ where: { kakaoId } });
 
@@ -68,12 +68,12 @@ class AuthService {
             user = await prisma.user.findUnique({ where: { email } });
 
             if (user) {
-                // 기존 계정에 kakaoId와 imageUrl 업데이트
+                // 기존 계정에 kakaoId와 카카오 프로필 이미지 URL 업데이트
                 user = await prisma.user.update({
                     where: { id: user.id },
                     data: {
                         kakaoId,
-                        ...(imageUrl && { imageUrl })
+                        kakaoProfileImageUrl
                     }
                 });
             } else {
@@ -83,8 +83,21 @@ class AuthService {
                         kakaoId,
                         nickname,
                         email,
-                        ...(imageUrl && { imageUrl })
+                        kakaoProfileImageUrl,
+                        imageUrl: null, // 커스텀 이미지는 null로 시작
+                        imageKey: null  // 커스텀 이미지 키도 null로 시작
                     },
+                });
+            }
+        } else {
+            // 기존 카카오 사용자의 경우 카카오 프로필 이미지 URL만 업데이트
+            // (커스텀 이미지가 없는 경우에만)
+            if (!user.imageUrl) {
+                user = await prisma.user.update({
+                    where: { id: user.id },
+                    data: {
+                        kakaoProfileImageUrl
+                    }
                 });
             }
         }
@@ -108,6 +121,11 @@ class AuthService {
         } catch (error) {
             throw error;
         }
+    }
+
+    // 사용자 프로필 이미지 URL 반환 (우선순위: 커스텀 > 카카오)
+    getUserProfileImageUrl(user) {
+        return user.imageUrl || user.kakaoProfileImageUrl;
     }
 }
 

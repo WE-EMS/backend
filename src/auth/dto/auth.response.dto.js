@@ -1,6 +1,6 @@
 // 사용자 정보 응답 DTO
 export class AuthResponseDto {
-    constructor({ id, kakaoId, nickname, email, imageUrl, imageKey, birth, phone, region, tokenBalance, createdAt, updatedAt }) {
+    constructor({ id, kakaoId, nickname, email, imageUrl, imageKey, birth, phone, region, tokenBalance, createdAt, updatedAt, kakaoProfileImageUrl }) {
         this.id = id;
         this.kakaoId = kakaoId;
         this.nickname = nickname;
@@ -13,6 +13,11 @@ export class AuthResponseDto {
         this.tokenBalance = tokenBalance;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.kakaoProfileImageUrl = kakaoProfileImageUrl;
+
+        // 계산된 필드들
+        this.profileImageUrl = imageUrl || kakaoProfileImageUrl; // 우선순위: 커스텀 > 카카오
+        this.hasCustomImage = !!imageUrl;
     }
 
     static fromUser(user) {
@@ -28,16 +33,18 @@ export class AuthResponseDto {
             region: user.region,
             tokenBalance: user.tokenBalance,
             createdAt: user.createdAt,
-            updatedAt: user.updatedAt
+            updatedAt: user.updatedAt,
+            kakaoProfileImageUrl: user.kakaoProfileImageUrl
         });
     }
 
     // 민감한 정보 제외한 공개용 사용자 정보
     static publicInfo(user) {
+        const profileImageUrl = user.imageUrl || user.kakaoProfileImageUrl;
         return {
             id: user.id,
             nickname: user.nickname,
-            imageUrl: user.imageUrl
+            imageUrl: profileImageUrl // 최종 프로필 이미지 URL 반환
         };
     }
 }
