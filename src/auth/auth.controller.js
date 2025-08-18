@@ -246,20 +246,40 @@ import { AuthResponseDto } from "./dto/auth.response.dto.js";
  *                     email:
  *                       type: string
  *                       example: "user@example.com"
- *                     imageUrl:
+ *                     profileImageUrl:
  *                       type: string
- *                       example: "https://example.com/profile.jpgg"
- *                     imageKey:
- *                       type: null
- *                       example: null
+ *                       example: "https://example.com/profile.jpg"
+ *                       description: "현재 사용 중인 프로필 이미지 URL (커스텀 > 카카오 순서)"
+ *                     kakaoProfileImageUrl:
+ *                       type: string
+ *                       example: "https://k.kakaocdn.net/dn/profile.jpg"
+ *                       description: "카카오 원본 프로필 이미지 URL"
+ *                     customImageUrl:
+ *                       type: string
+ *                       nullable: true
+ *                       example: "https://s3.amazonaws.com/bucket/custom-profile.jpg"
+ *                       description: "사용자가 업로드한 커스텀 프로필 이미지 URL (S3)"
+ *                     customImageKey:
+ *                       type: string
+ *                       nullable: true
+ *                       example: "user-profiles/2025/uuid_profile.jpg"
+ *                       description: "S3에 저장된 커스텀 이미지의 키 (삭제용)"
+ *                     hasCustomImage:
+ *                       type: boolean
+ *                       example: false
+ *                       description: "커스텀 프로필 이미지 보유 여부"
  *                     birth:
- *                       type: null
+ *                       type: string
+ *                       nullable: true
+ *                       format: date-time
  *                       example: null
  *                     phone:
- *                       type: null
+ *                       type: string
+ *                       nullable: true
  *                       example: null
  *                     region:
- *                       type: null
+ *                       type: string
+ *                       nullable: true
  *                       example: null
  *                     tokenBalance:
  *                       type: integer

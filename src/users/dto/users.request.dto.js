@@ -2,8 +2,6 @@ export class UpdateProfileRequestDto {
     constructor(data = {}) {
         this.nickname = data.nickname;
         this.email = data.email;
-        this.imageUrl = data.imageUrl;
-        this.imageKey = data.imageKey;
         this.birth = data.birth ? new Date(data.birth) : undefined;
         this.phone = data.phone;
         this.region = data.region;
@@ -71,8 +69,6 @@ export class UpdateProfileRequestDto {
 
         if (this.nickname !== undefined) updateData.nickname = this.nickname;
         if (this.email !== undefined) updateData.email = this.email;
-        if (this.imageUrl !== undefined) updateData.imageUrl = this.imageUrl;
-        if (this.imageKey !== undefined) updateData.imageKey = this.imageKey;
         if (this.birth !== undefined) updateData.birth = this.birth;
         if (this.phone !== undefined) updateData.phone = this.phone;
         if (this.region !== undefined) updateData.region = this.region;

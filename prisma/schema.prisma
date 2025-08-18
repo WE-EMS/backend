@@ -9,18 +9,19 @@ datasource db {
 }
 
 model User {
-    id           Int       @id @default(autoincrement())
-    kakaoId      String    @unique // 카카오 user_id
-    nickname     String
-    email        String    @unique
-    imageUrl     String?
-    imageKey     String?
-    birth        DateTime?
-    phone        String?   @db.VarChar(20)
-    region       String?
-    tokenBalance Int       @default(0)
-    createdAt    DateTime  @default(now())
-    updatedAt    DateTime  @updatedAt
+    id                   Int       @id @default(autoincrement())
+    kakaoId              String    @unique // 카카오 user_id
+    nickname             String
+    email                String    @unique
+    kakaoProfileImageUrl String? // 카카오에서 받아온 프로필 이미지 URL
+    imageUrl             String? // S3에 저장된 커스텀 프로필 이미지 URL
+    imageKey             String? // S3에 저장된 커스텀 프로필 이미지 key (삭제용)
+    birth                DateTime?
+    phone                String?   @db.VarChar(20)
+    region               String?
+    tokenBalance         Int       @default(0)
+    createdAt            DateTime  @default(now())
+    updatedAt            DateTime  @updatedAt
 
     helpRequests    HelpRequest[]     @relation("RequestsByUser")
     applications    HelpApplication[] @relation("ApplicationsByUser")
@@ -31,27 +32,27 @@ model User {
 }
 
 model HelpRequest {
-    id           Int      @id @default(autoincrement())
-    requesterId  Int
-    helpType     Int // 1: 등하원, 2: 놀이, 3: 동행, 4: 기타
-    startAt      DateTime
-    endAt        DateTime
-    status       Int      @default(0) // 0: 요청, 1: 배정, 2: 완료, 3: 취소
-    addressText  String
-    lat          Decimal? @db.Decimal(10, 7)
-    lng          Decimal? @db.Decimal(10, 7)
-    content      String
-    note         String?
-    imageUrl     String?
-    imageKey     String?
-    rewardTokens Int      @default(0)
+    id              Int      @id @default(autoincrement())
+    requesterId     Int
+    addressText     String //  00시 00구 00동
+    helpType        Int // 1: 등하원, 2: 놀이, 3: 동행, 4: 기타
+    serviceDate     DateTime @db.Date // 날짜만 (ex: 2025-08-20)
+    startTime       DateTime @db.Time // 시작시간만 (ex: 09:30:00)
+    endTime         DateTime @db.Time // 종료시간만 (ex: 11:00:00)
+    requestLocation String? // 상세주소
+    requestDetail   String? // 상세내용
+    requestNote     String? // 참고사항
+    status          Int      @default(0) // 0: 요청, 1: 배정, 2: 완료, 3: 취소
+    imageUrl        String?
+    imageKey        String?
+    rewardTokens    Int      @default(0)
 
     requester    User              @relation("RequestsByUser", fields: [requesterId], references: [id])
     applications HelpApplication[]
     assignment   HelpAssignment?
     reviews      Review[]
 
-    @@index([status, startAt])
+    @@index([status, serviceDate, startTime])
 }
 
 model HelpApplication {
