@@ -25,57 +25,69 @@ const s3 = new S3Client({
 
 // 확장자 검사 목록
 const allowedExtensions = [".png", ".jpg", ".jpeg", ".bmp", ".gif"];
+const allowedMimeTypes = [
+    'image/png',
+    'image/jpg',
+    'image/jpeg',
+    'image/bmp',
+    'image/gif'
+];
 
-export const imageUploader = multer({
-    storage: multerS3({
-        s3: s3, // S3 객체
-        bucket: AWS_S3_BUCKET_NAME, // Bucket 이름
-        contentType: multerS3.AUTO_CONTENT_TYPE, // Content-type, 자동으로 찾도록 설정
-        key: (req, file, callback) => {
-            // 파일명
-            const uploadDirectory = req.query.directory ?? ""; // 기본 디렉토리 설정
-            const extension = path.extname(file.originalname).toLowerCase(); // 파일 확장자 (소문자로 변환)
-            const uuid = uuidv4(); // UUID 생성
+// 업로드 디렉토리 타입 정의
+const UPLOAD_DIRECTORIES = {
+    HELP_REQUEST: 'help-requests',
+    USER_PROFILE: 'user-profiles',
+    STORE: 'store-items'
+};
 
-            // extension 확인을 위한 코드 (확장자 검사용)
-            if (!allowedExtensions.includes(extension)) {
-                return callback(createError(`지원하지 않는 파일 확장자입니다. 허용된 확장자: ${allowedExtensions.join(', ')}`, 400));
+// 기본 이미지 업로더 팩토리 함수
+const createImageUploader = (directory) => {
+    return multer({
+        storage: multerS3({
+            s3: s3,
+            bucket: AWS_S3_BUCKET_NAME,
+            contentType: multerS3.AUTO_CONTENT_TYPE,
+            key: (req, file, callback) => {
+                const extension = path.extname(file.originalname).toLowerCase();
+                const uuid = uuidv4();
+
+                // extension 확인
+                if (!allowedExtensions.includes(extension)) {
+                    return callback(createError(`지원하지 않는 파일 확장자입니다. 허용된 확장자: ${allowedExtensions.join(', ')}`, 400));
+                }
+
+                // 파일명에서 특수문자 제거 및 안전한 파일명 생성
+                const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '');
+                const fileName = `${directory}/${new Date().getFullYear()}/${uuid}_${safeName}`;
+
+                callback(null, fileName);
+            },
+            metadata: (req, file, callback) => {
+                callback(null, {
+                    'uploaded-by': 'we-ems-api',
+                    'upload-date': new Date().toISOString(),
+                    'directory': directory
+                });
             }
-
-            // 파일명에서 특수문자 제거 및 안전한 파일명 생성
-            const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '');
-            const fileName = `${uploadDirectory}/${uuid}_${safeName}`;
-
-            callback(null, fileName);
+        }),
+        limits: {
+            fileSize: 5 * 1024 * 1024,
+            files: 1
         },
-        // acl: "public-read", // ACL 비활성화된 버킷에서는 사용 불가
-        metadata: (req, file, callback) => {
-            // 메타데이터 추가
-            callback(null, {
-                'uploaded-by': 'we-ems-api',
-                'upload-date': new Date().toISOString()
-            });
+        fileFilter: (req, file, callback) => {
+            if (allowedMimeTypes.includes(file.mimetype)) {
+                callback(null, true);
+            } else {
+                callback(createError(`지원하지 않는 파일 타입입니다. 허용된 타입: ${allowedMimeTypes.join(', ')}`, 400));
+            }
         }
-    }),
-    // 이미지 용량 제한 (5MB)
-    limits: {
-        fileSize: 5 * 1024 * 1024,
-        files: 1 // 한 번에 하나의 파일만 업로드
-    },
-    // 파일 필터 추가 (MIME 타입 검사)
-    fileFilter: (req, file, callback) => {
-        const allowedMimeTypes = [
-            'image/png',
-            'image/jpg',
-            'image/jpeg',
-            'image/bmp',
-            'image/gif'
-        ];
+    });
+};
 
-        if (allowedMimeTypes.includes(file.mimetype)) {
-            callback(null, true);
-        } else {
-            callback(createError(`지원하지 않는 파일 타입입니다. 허용된 타입: ${allowedMimeTypes.join(', ')}`, 400));
-        }
-    }
-});
+// 각 용도별 업로더 생성
+export const helpRequestImageUploader = createImageUploader(UPLOAD_DIRECTORIES.HELP_REQUEST);
+export const userProfileImageUploader = createImageUploader(UPLOAD_DIRECTORIES.USER_PROFILE);
+export const storeImageUploader = createImageUploader(UPLOAD_DIRECTORIES.STORE);
+
+// 기본 업로더 (하위 호환성을 위해)
+export const imageUploader = createImageUploader('general');
