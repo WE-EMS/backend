@@ -46,6 +46,8 @@ model HelpRequest {
     imageUrl        String?
     imageKey        String?
     rewardTokens    Int      @default(0)
+    createdAt       DateTime @default(now())
+    updatedAt       DateTime @updatedAt
 
     requester    User              @relation("RequestsByUser", fields: [requesterId], references: [id])
     applications HelpApplication[]
