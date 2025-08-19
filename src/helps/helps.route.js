@@ -12,6 +12,9 @@ const router = express.Router();
  *   description: 돌봄요청 관리 API
  */
 
+// 리스트 조회
+router.get("/", requireAuth, helpsController.getHelpList);
+
 // 돌봄요청 글 작성
 router.post("/", requireAuth, helpRequestImageUploader.single('image'), helpsController.createHelpRequest);
 

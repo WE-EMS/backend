@@ -765,6 +765,148 @@ export class HelpsController {
             next(error);
         }
     }
+
+    /**
+     * @swagger
+     * /api/helps:
+     *   get:
+     *     tags: [Helps]
+     *     summary: 돌봄요청 리스트 조회
+     *     description: status=0(요청 상태)인 항목만 조회합니다.
+     *     security:
+     *       - bearerAuth: []
+     *     parameters:
+     *       - in: query
+     *         name: page
+     *         schema: { type: integer, default: 1 }
+     *         description: 페이지 번호
+     *       - in: query
+     *         name: size
+     *         schema: { type: integer, default: 10 }
+     *         description: 페이지당 항목 수
+     *     responses:
+     *       200:
+     *         description: 리스트 조회 성공
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 resultType:
+     *                   type: string
+     *                   example: SUCCESS
+     *                 error:
+     *                   type: object
+     *                   nullable: true
+     *                   example: null
+     *                 success:
+     *                   type: object
+     *                   properties:
+     *                     requests:
+     *                       type: array
+     *                       items:
+     *                         type: object
+     *                         properties:
+     *                           id: { type: integer, example: 2 }
+     *                           helpType: { type: integer, example: 3 }
+     *                           helpTypeText: { type: string, example: "동행 돌봄" }
+     *                           serviceDate: { type: string, format: date-time, example: "2025-08-19T00:00:00.000Z" }
+     *                           startTime: { type: string, format: date-time, example: "1970-01-01T00:30:00.000Z" }
+     *                           endTime: { type: string, format: date-time, example: "1970-01-01T02:00:00.000Z" }
+     *                           addressText: { type: string, example: "서울시 동대문구 한교동" }
+     *                           rewardTokens: { type: integer, example: 5 }
+     *                           createdAt: { type: string, format: date-time, example: "2025-08-18T17:34:07.826Z" }
+     *                           updatedAt: { type: string, format: date-time, example: "2025-08-18T17:34:07.826Z" }
+     *                           durationMinutes: { type: integer, example: 90 }
+     *                           requester:
+     *                             type: object
+     *                             properties:
+     *                               id: { type: integer, example: 2 }
+     *                               nickname: { type: string, example: "수림" }
+     *                               imageUrl: { type: string, example: "https://~..." }
+     *                               avgRating: { type: number, format: float, example: 0 }
+     *                               reviewCount: { type: integer, example: 0 }
+     *                     pagination:
+     *                       type: object
+     *                       properties:
+     *                         page: { type: integer, example: 2 }
+     *                         totalPage: { type: integer, example: 2 }
+     *       401:
+     *         description: 인증 필요 (로그인 안 됨)
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 resultType: { type: string, example: FAIL }
+     *                 error:
+     *                   type: object
+     *                   properties:
+     *                     errorCode: { type: string, example: UNAUTHORIZED }
+     *                     reason: { type: string, example: "로그인이 필요합니다." }
+     *                     data: { type: object, nullable: true }
+     *                 success: { nullable: true, example: null }
+     *       500:
+     *         description: 서버 내부 오류
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 resultType:
+     *                   type: string
+     *                   example: FAIL
+     *                 error:
+     *                   type: object
+     *                   properties:
+     *                     errorCode:
+     *                       type: string
+     *                       example: UPDATE_ERROR
+     *                     reason:
+     *                       type: string
+     *                       example: "돌봄요청 조회 중 오류가 발생했습니다."
+     *                     data:
+     *                       type: object
+     *                       example: {}
+     *                 success:
+     *                   nullable: true
+     *                   example: null
+     */
+    async getHelpList(req, res, next) {
+        try {
+            if (!req.user) {
+                return res.error({
+                    errorCode: "UNAUTHORIZED",
+                    reason: "로그인이 필요합니다.",
+                    statusCode: 401,
+                });
+            }
+            const page = parseInt(req.query.page ?? "1");
+            const size = parseInt(req.query.size ?? "10");
+
+            const result = await helpsService.getHelpList({ page, size });
+
+            return res.status(200).json({
+                resultType: "SUCCESS",
+                error: null,
+                success: {
+                    requests: result.requests,   // 배열
+                    pagination: result.pagination // { page, totalPage }
+                }
+            });
+        } catch (error) {
+            return res.status(500).json({
+                resultType: "FAIL",
+                error: {
+                    errorCode: "UPDATE_ERROR",
+                    reason: "돌봄요청 조회 중 오류가 발생했습니다.",
+                    data: {}
+                },
+                success: null
+            });
+        }
+    }
+
 }
 
 export const helpsController = new HelpsController();
