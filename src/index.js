@@ -2,6 +2,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import cookieParser from "cookie-parser";
+import multer from "multer";
 import { prisma } from "./db.config.js";
 import swaggerUiExpress from "swagger-ui-express";
 import { swaggerSpec } from "./swagger/swaggerSpec.js";
@@ -18,6 +19,7 @@ import { injectUser } from "./auth/auth.middleware.js";
 
 // 라우트 연결
 import { usersRoutes } from "./users/users.route.js";
+import { helpsRoutes } from "./helps/helps.route.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -99,6 +101,7 @@ app.use(
 // 라우트 연결
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
+app.use("/api/helps", helpsRoutes);
 
 // 기존 카카오 로그인 라우트 (호환성을 위해 유지)
 app.get("/oauth2/login/kakao", (req, res) => {
