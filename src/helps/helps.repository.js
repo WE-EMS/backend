@@ -115,6 +115,33 @@ export class HelpsRepository {
             return true;
         });
     }
+
+    // 리스트 조회
+    async findHelpRequests({ skip, take, where, orderBy }) {
+        const [items, total] = await Promise.all([
+            prisma.helpRequest.findMany({
+                where,
+                skip,
+                take,
+                orderBy,
+                include: {
+                    requester: {
+                        select: {
+                            id: true,
+                            nickname: true,
+                            imageUrl: true,
+                            kakaoProfileImageUrl: true,
+                            _count: { select: { reviewsReceived: true } },
+                            reviewsReceived: { select: { rating: true } },
+                        },
+                    },
+                },
+            }),
+            prisma.helpRequest.count({ where }),
+        ]);
+
+        return { items, total };
+    }
 }
 
 export const helpsRepository = new HelpsRepository();

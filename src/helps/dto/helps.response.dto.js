@@ -57,10 +57,67 @@ export class HelpRequestResponseDto {
     }
 }
 
+// 리스트 조회용 간소화된 DTO
+export class HelpRequestListItemDto {
+    constructor(helpRequest) {
+        this.id = helpRequest.id;
+        this.helpType = helpRequest.helpType;
+        this.helpTypeText = this._getHelpTypeText(helpRequest.helpType);
+        this.serviceDate = helpRequest.serviceDate;
+        this.startTime = helpRequest.startTime;
+        this.endTime = helpRequest.endTime;
+        this.addressText = helpRequest.addressText;
+        this.rewardTokens = helpRequest.rewardTokens;
+        this.createdAt = helpRequest.createdAt;
+        this.updatedAt = helpRequest.updatedAt;
+
+        // 소요 분
+        this.durationMinutes = this._calcDurationMinutes(helpRequest.startTime, helpRequest.endTime);
+
+        // 요청자 요약 + 평점/리뷰수
+        if (helpRequest.requester) {
+            const ratings = Array.isArray(helpRequest.requester.reviewsReceived)
+                ? helpRequest.requester.reviewsReceived.map(r => r.rating)
+                : [];
+            const reviewCount = helpRequest.requester._count?.reviewsReceived ?? 0;
+            const avgRating = ratings.length
+                ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10
+                : 0;
+
+            this.requester = {
+                id: helpRequest.requester.id,
+                nickname: helpRequest.requester.nickname,
+                imageUrl: helpRequest.requester.imageUrl || helpRequest.requester.kakaoProfileImageUrl,
+                avgRating,
+                reviewCount,
+            };
+        }
+    }
+
+    _calcDurationMinutes(start, end) {
+        if (!start || !end) return 0;
+        try {
+            const s = new Date(start);
+            const e = new Date(end);
+            return Math.max(0, Math.round((e - s) / (1000 * 60)));
+        } catch {
+            return 0;
+        }
+    }
+
+    _getHelpTypeText(helpType) {
+        const types = { 1: "등/하원 돌봄", 2: "놀이 돌봄", 3: "동행 돌봄", 4: "기타 돌봄" };
+        return types[helpType] || "알 수 없음";
+    }
+}
+
 export class HelpRequestListResponseDto {
-    constructor(requests, pagination) {
-        this.requests = requests.map(request => new HelpRequestResponseDto(request));
-        this.pagination = pagination;
+    constructor(requests, page, totalPage) {
+        this.requests = requests.map(request => new HelpRequestListItemDto(request));
+        this.pagination = {
+            page: page,
+            totalPage: totalPage
+        };
     }
 }
 
