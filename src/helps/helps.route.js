@@ -14,7 +14,7 @@ const router = express.Router();
  */
 
 // 리스트 조회
-router.get("/", requireAuth, helpsController.getHelpList);
+router.get("/", helpsController.getHelpList);
 
 // 돌봄요청 글 작성
 router.post("/", requireAuth, helpRequestImageUploader.single('image'), helpsController.createHelpRequest);
