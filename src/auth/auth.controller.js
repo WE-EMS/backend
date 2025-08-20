@@ -474,9 +474,8 @@ import { AuthResponseDto } from "./dto/auth.response.dto.js";
 
 // 프론트엔드에서 OAuth 콜백을 받도록 수정된 콜백 URI
 const getRedirectUri = () => {
-    return process.env.NODE_ENV === 'production'
-        ? 'https://jogakdolbom.vercel.app/oauth2/kakao'
-        : 'http://localhost:3000/oauth2/kakao';
+    return process.env.KAKAO_REDIRECT_URI_PROD
+        || process.env.KAKAO_REDIRECT_URI_DEV
 };
 
 class AuthController {
