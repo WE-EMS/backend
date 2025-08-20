@@ -767,131 +767,141 @@ export class HelpsController {
     }
 
     /**
-     * @swagger
-     * /api/helps:
-     *   get:
-     *     tags: [Helps]
-     *     summary: 돌봄요청 리스트 조회
-     *     description: 모든 상태의 돌봄요청 리스트를 조회합니다.
-     *     security:
-     *       - bearerAuth: []
-     *     parameters:
-     *       - in: query
-     *         name: page
-     *         schema: { type: integer, default: 1 }
-     *         description: 페이지 번호
-     *       - in: query
-     *         name: size
-     *         schema: { type: integer, default: 10 }
-     *         description: 페이지당 항목 수
-     *     responses:
-     *       200:
-     *         description: 리스트 조회 성공
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 resultType:
-     *                   type: string
-     *                   example: SUCCESS
-     *                 error:
-     *                   type: object
-     *                   nullable: true
-     *                   example: null
-     *                 success:
-     *                   type: object
-     *                   properties:
-     *                     requests:
-     *                       type: array
-     *                       items:
-     *                         type: object
-     *                         properties:
-     *                           id: { type: integer, example: 2 }
-     *                           helpType: { type: integer, example: 3 }
-     *                           helpTypeText: { type: string, example: "동행 돌봄" }
-     *                           serviceDate: { type: string, format: date-time, example: "2025-08-19T00:00:00.000Z" }
-     *                           startTime: { type: string, format: date-time, example: "1970-01-01T00:30:00.000Z" }
-     *                           endTime: { type: string, format: date-time, example: "1970-01-01T02:00:00.000Z" }
-     *                           addressText: { type: string, example: "서울시 동대문구 한국동" }
-     *                           rewardTokens: { type: integer, example: 5 }
-     *                           createdAt: { type: string, format: date-time, example: "2025-08-18T17:34:07.826Z" }
-     *                           updatedAt: { type: string, format: date-time, example: "2025-08-18T17:34:07.826Z" }
-     *                           durationMinutes: { type: integer, example: 90 }
-     *                           requester:
-     *                             type: object
-     *                             properties:
-     *                               id: { type: integer, example: 2 }
-     *                               nickname: { type: string, example: "수림" }
-     *                               imageUrl: { type: string, example: "https://example.com/image.jpg" }
-     *                               avgRating: { type: number, format: float, example: 4.5 }
-     *                               reviewCount: { type: integer, example: 12 }
-     *                     pagination:
-     *                       type: object
-     *                       properties:
-     *                         page: { type: integer, example: 2 }
-     *                         totalPage: { type: integer, example: 2 }
-     *       401:
-     *         description: 인증 필요 (로그인 안 됨)
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 resultType: { type: string, example: FAIL }
-     *                 error:
-     *                   type: object
-     *                   properties:
-     *                     errorCode: { type: string, example: UNAUTHORIZED }
-     *                     reason: { type: string, example: "로그인이 필요합니다." }
-     *                     data: { type: object, nullable: true }
-     *                 success: { nullable: true, example: null }
-     *       500:
-     *         description: 서버 내부 오류
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 resultType:
-     *                   type: string
-     *                   example: FAIL
-     *                 error:
-     *                   type: object
-     *                   properties:
-     *                     errorCode:
-     *                       type: string
-     *                       example: UPDATE_ERROR
-     *                     reason:
-     *                       type: string
-     *                       example: "돌봄요청 조회 중 오류가 발생했습니다."
-     *                     data:
-     *                       type: object
-     *                       example: {}
-     *                 success:
-     *                   nullable: true
-     *                   example: null
-     */
+ * @swagger
+ * /api/helps:
+ *   get:
+ *     tags:
+ *       - Helps
+ *     summary: 돌봄요청 리스트 조회
+ *     description: 모든 상태의 돌봄요청 리스트를 조회합니다. 다중값 선택 시 ⌘(Ctrl) 누르고 조회해야 합니다.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: 페이지 번호
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: 페이지당 항목 수
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: integer
+ *           enum: [0, 1, 2]
+ *         description: "매칭 상태 (0: 요청, 1: 배정, 2: 완료)"
+ *       - in: query
+ *         name: helpTypes
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: integer
+ *             enum: [1, 2, 3, 4]
+ *         style: form
+ *         explode: true
+ *         description: "돌봄 유형 다중선택 (?helpTypes=1&helpTypes=2)"
+ *     responses:
+ *       200:
+ *         description: 리스트 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultType:
+ *                   type: string
+ *                   example: SUCCESS
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *                   example: null
+ *                 success:
+ *                   type: object
+ *                   properties:
+ *                     requests:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id: { type: integer, example: 2 }
+ *                           helpType: { type: integer, example: 3 }
+ *                           helpTypeText: { type: string, example: "동행 돌봄" }
+ *                           serviceDate: { type: string, format: date-time, example: "2025-08-19T00:00:00.000Z" }
+ *                           startTime: { type: string, format: date-time, example: "1970-01-01T00:30:00.000Z" }
+ *                           endTime: { type: string, format: date-time, example: "1970-01-01T02:00:00.000Z" }
+ *                           addressText: { type: string, example: "서울시 동대문구 한국동" }
+ *                           rewardTokens: { type: integer, example: 5 }
+ *                           createdAt: { type: string, format: date-time, example: "2025-08-18T17:34:07.826Z" }
+ *                           updatedAt: { type: string, format: date-time, example: "2025-08-18T17:34:07.826Z" }
+ *                           durationMinutes: { type: integer, example: 90 }
+ *                           requester:
+ *                             type: object
+ *                             properties:
+ *                               id: { type: integer, example: 2 }
+ *                               nickname: { type: string, example: "수림" }
+ *                               imageUrl: { type: string, example: "https://example.com/image.jpg" }
+ *                               avgRating: { type: number, format: float, example: 4.5 }
+ *                               reviewCount: { type: integer, example: 12 }
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         page: { type: integer, example: 2 }
+ *                         totalPage: { type: integer, example: 2 }
+ *       500:
+ *         description: 서버 내부 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultType:
+ *                   type: string
+ *                   example: FAIL
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     errorCode:
+ *                       type: string
+ *                       example: UPDATE_ERROR
+ *                     reason:
+ *                       type: string
+ *                       example: "돌봄요청 조회 중 오류가 발생했습니다."
+ *                     data:
+ *                       type: object
+ *                       example: {}
+ *                 success:
+ *                   nullable: true
+ *                   example: null
+ */
     async getHelpList(req, res, next) {
         try {
-            if (!req.user) {
-                return res.error({
-                    errorCode: "UNAUTHORIZED",
-                    reason: "로그인이 필요합니다.",
-                    statusCode: 401,
-                });
-            }
             const page = parseInt(req.query.page ?? "1");
             const size = parseInt(req.query.size ?? "10");
 
-            const result = await helpsService.getHelpList({ page, size });
+            // status: 단일값
+            const status =
+                req.query.status !== undefined ? parseInt(req.query.status) : undefined;
+
+            // helpTypes: 배열 쿼리 (?helpTypes=1&helpTypes=2)
+            let helpTypes = [];
+            if (Array.isArray(req.query.helpTypes)) {
+                helpTypes = req.query.helpTypes.map(v => parseInt(v)).filter(v => !Number.isNaN(v));
+            } else if (req.query.helpTypes) {
+                // 단일 값만 넘어온 경우
+                helpTypes = [parseInt(req.query.helpTypes)].filter(v => !Number.isNaN(v));
+            }
+
+            const result = await helpsService.getHelpList({ page, size, status, helpTypes });
 
             return res.status(200).json({
                 resultType: "SUCCESS",
                 error: null,
                 success: {
-                    requests: result.requests,   // 배열
-                    pagination: result.pagination // { page, totalPage }
+                    requests: result.requests,
+                    pagination: result.pagination
                 }
             });
         } catch (error) {
