@@ -2,6 +2,7 @@ import express from "express";
 import { helpsController } from "./helps.controller.js";
 import { requireAuth } from "../auth/auth.middleware.js";
 import { helpRequestImageUploader } from "../middleware/image.uploader.js";
+import { applicationsRoutes } from "../applications/applications.route.js";
 
 const router = express.Router();
 
@@ -26,5 +27,9 @@ router.put("/:helpId", requireAuth, helpRequestImageUploader.single('image'), he
 
 // 돌봄요청 글 삭제
 router.delete("/:helpId", requireAuth, helpsController.deleteHelpRequest);
+
+
+// applications 라우트
+router.use("/", applicationsRoutes);
 
 export { router as helpsRoutes };
