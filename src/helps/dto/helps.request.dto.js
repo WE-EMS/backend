@@ -101,3 +101,14 @@ export class CreateHelpRequestDto {
         };
     }
 }
+
+// 내 돌봄요청 리스트 응답 DTO
+export class MyHelpRequestListResponseDto {
+    constructor(requests, page, totalPage) {
+        this.requests = requests.map(request => new MyHelpRequestListItemDto(request));
+        this.pagination = {
+            page: page,
+            totalPage: totalPage
+        };
+    }
+}
