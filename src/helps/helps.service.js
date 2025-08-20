@@ -189,19 +189,21 @@ export class HelpsService {
         }
     }
 
-    // 돌봄요청 리스트 조회
+    // 돌봄요청 리스트 조회 (모든 상태 포함)
     async getHelpList({ page = 1, size = 10 }) {
         const skip = (page - 1) * size;
         const take = size;
 
-        // status=0 고정 (요청 상태만 조회)
-        const where = { status: 0 };
+        // 모든 상태의 돌봄요청 조회
+        const where = {}; // 빈 객체로 변경하여 모든 레코드 조회
+
         const { items, total } = await helpsRepository.findHelpRequests({
             skip,
             take,
             where,
             orderBy: { id: "desc" },
         });
+
         const totalPage = Math.ceil(total / size);
         return new HelpRequestListResponseDto(items, page, totalPage);
     }

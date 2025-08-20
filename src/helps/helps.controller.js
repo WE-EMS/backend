@@ -772,7 +772,7 @@ export class HelpsController {
      *   get:
      *     tags: [Helps]
      *     summary: 돌봄요청 리스트 조회
-     *     description: status=0(요청 상태)인 항목만 조회합니다.
+     *     description: 모든 상태의 돌봄요청 리스트를 조회합니다.
      *     security:
      *       - bearerAuth: []
      *     parameters:
@@ -813,7 +813,7 @@ export class HelpsController {
      *                           serviceDate: { type: string, format: date-time, example: "2025-08-19T00:00:00.000Z" }
      *                           startTime: { type: string, format: date-time, example: "1970-01-01T00:30:00.000Z" }
      *                           endTime: { type: string, format: date-time, example: "1970-01-01T02:00:00.000Z" }
-     *                           addressText: { type: string, example: "서울시 동대문구 한교동" }
+     *                           addressText: { type: string, example: "서울시 동대문구 한국동" }
      *                           rewardTokens: { type: integer, example: 5 }
      *                           createdAt: { type: string, format: date-time, example: "2025-08-18T17:34:07.826Z" }
      *                           updatedAt: { type: string, format: date-time, example: "2025-08-18T17:34:07.826Z" }
@@ -823,9 +823,9 @@ export class HelpsController {
      *                             properties:
      *                               id: { type: integer, example: 2 }
      *                               nickname: { type: string, example: "수림" }
-     *                               imageUrl: { type: string, example: "https://~..." }
-     *                               avgRating: { type: number, format: float, example: 0 }
-     *                               reviewCount: { type: integer, example: 0 }
+     *                               imageUrl: { type: string, example: "https://example.com/image.jpg" }
+     *                               avgRating: { type: number, format: float, example: 4.5 }
+     *                               reviewCount: { type: integer, example: 12 }
      *                     pagination:
      *                       type: object
      *                       properties:
