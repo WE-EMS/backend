@@ -142,6 +142,52 @@ export class HelpsRepository {
 
         return { items, total };
     }
+
+    // 내가 작성한 돌봄요청 조회 (신청자 및 배정 정보 포함)
+    async findMyHelpRequests({ skip, take, where, orderBy }) {
+        const [items, total] = await Promise.all([
+            prisma.helpRequest.findMany({
+                where,
+                skip,
+                take,
+                orderBy,
+                include: {
+                    applications: {
+                        include: {
+                            helper: {
+                                select: {
+                                    id: true,
+                                    imageUrl: true,
+                                    kakaoProfileImageUrl: true
+                                }
+                            }
+                        }
+                    },
+                    assignment: {
+                        include: {
+                            helper: {
+                                select: {
+                                    id: true,
+                                    nickname: true,
+                                    imageUrl: true,
+                                    kakaoProfileImageUrl: true,
+                                    _count: {
+                                        select: { reviewsReceived: true }
+                                    },
+                                    reviewsReceived: {
+                                        select: { rating: true }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+            }),
+            prisma.helpRequest.count({ where }),
+        ]);
+
+        return { items, total };
+    }
 }
 
 export const helpsRepository = new HelpsRepository();

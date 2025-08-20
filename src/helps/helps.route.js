@@ -16,6 +16,9 @@ const router = express.Router();
 // 리스트 조회
 router.get("/", helpsController.getHelpList);
 
+// 내가 작성한 돌봄요청 조회 (진행중인 글만)
+router.get("/me", requireAuth, helpsController.getMyHelpRequests);
+
 // 돌봄요청 글 작성
 router.post("/", requireAuth, helpRequestImageUploader.single('image'), helpsController.createHelpRequest);
 

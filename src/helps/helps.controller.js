@@ -917,6 +917,197 @@ export class HelpsController {
         }
     }
 
+
+    /**
+ * @swagger
+ * /api/helps/me:
+ *   get:
+ *     tags: [Helps]
+ *     summary: 내가 작성한 돌봄요청 조회 (진행중인 글만)
+ *     description: "로그인한 사용자가 작성한 돌봄요청 중 진행중인 글들을 조회합니다. (status 0: 요청, 1: 배정)"
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: 페이지 번호
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: 페이지당 항목 수
+ *     responses:
+ *       200:
+ *         description: 내 돌봄요청 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultType:
+ *                   type: string
+ *                   example: SUCCESS
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *                   example: null
+ *                 success:
+ *                   type: object
+ *                   properties:
+ *                     requests:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 1
+ *                           serviceDate:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2025-08-20T00:00:00.000Z"
+ *                           startTime:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "1970-01-01T09:30:00.000Z"
+ *                           endTime:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "1970-01-01T11:00:00.000Z"
+ *                           helpType:
+ *                             type: integer
+ *                             example: 1
+ *                           helpTypeText:
+ *                             type: string
+ *                             example: "등/하원 돌봄"
+ *                           status:
+ *                             type: integer
+ *                             example: 0
+ *                           applicants:
+ *                             type: array
+ *                             description: "신청자가 있는 경우에만 포함"
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 helperId:
+ *                                   type: integer
+ *                                   example: 5
+ *                                 helperImageUrl:
+ *                                   type: string
+ *                                   example: "https://example.com/helper1.jpg"
+ *                           assignedHelper:
+ *                             type: object
+ *                             description: "status=1(매칭완료)인 경우에만 포함"
+ *                             properties:
+ *                               nickname:
+ *                                 type: string
+ *                                 example: "김도우미"
+ *                               imageUrl:
+ *                                 type: string
+ *                                 example: "https://example.com/assigned_helper.jpg"
+ *                               reviewCount:
+ *                                 type: integer
+ *                                 example: 15
+ *                               avgRating:
+ *                                 type: number
+ *                                 example: 4.8
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         page:
+ *                           type: integer
+ *                           example: 1
+ *                         totalPage:
+ *                           type: integer
+ *                           example: 2
+ *       401:
+ *         description: 인증 필요 (로그인 안 됨)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultType:
+ *                   type: string
+ *                   example: FAIL
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     errorCode:
+ *                       type: string
+ *                       example: UNAUTHORIZED
+ *                     reason:
+ *                       type: string
+ *                       example: "로그인이 필요합니다."
+ *                     data:
+ *                       type: object
+ *                       nullable: true
+ *                 success:
+ *                   nullable: true
+ *                   example: null
+ *       500:
+ *         description: 서버 내부 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultType:
+ *                   type: string
+ *                   example: FAIL
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     errorCode:
+ *                       type: string
+ *                       example: FETCH_ERROR
+ *                     reason:
+ *                       type: string
+ *                       example: "내 돌봄요청 조회 중 오류가 발생했습니다."
+ *                     data:
+ *                       type: object
+ *                       nullable: true
+ *                 success:
+ *                   nullable: true
+ *                   example: null
+ */
+    async getMyHelpRequests(req, res, next) {
+        try {
+            if (!req.user) {
+                return res.error({
+                    errorCode: "UNAUTHORIZED",
+                    reason: "로그인이 필요합니다.",
+                    statusCode: 401
+                });
+            }
+
+            const page = parseInt(req.query.page ?? "1");
+            const size = parseInt(req.query.size ?? "10");
+
+            const result = await helpsService.getMyHelpRequests({
+                requesterId: req.user.id,
+                page,
+                size
+            });
+
+            return res.status(200).json({
+                resultType: "SUCCESS",
+                error: null,
+                success: {
+                    requests: result.requests,
+                    pagination: result.pagination
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
 }
+
 
 export const helpsController = new HelpsController();
