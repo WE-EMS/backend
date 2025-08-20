@@ -190,12 +190,17 @@ export class HelpsService {
     }
 
     // 돌봄요청 리스트 조회 (모든 상태 포함)
-    async getHelpList({ page = 1, size = 10 }) {
+    async getHelpList({ page = 1, size = 10, status, helpTypes = [] }) {
         const skip = (page - 1) * size;
         const take = size;
 
-        // 모든 상태의 돌봄요청 조회
-        const where = {}; // 빈 객체로 변경하여 모든 레코드 조회
+        const where = {};
+        if ([0, 1, 2].includes(status)) {
+            where.status = status;
+        }
+        if (helpTypes.length > 0) {
+            where.helpType = { in: helpTypes };
+        }
 
         const { items, total } = await helpsRepository.findHelpRequests({
             skip,
