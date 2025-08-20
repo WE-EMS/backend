@@ -473,15 +473,24 @@ import { AuthResponseDto } from "./dto/auth.response.dto.js";
  */
 
 // 프론트엔드에서 OAuth 콜백을 받도록 수정된 콜백 URI
-const getRedirectUri = () => {
-    return process.env.KAKAO_REDIRECT_URI_PROD
-        || process.env.KAKAO_REDIRECT_URI_DEV
+const getRedirectUri = (req) => {
+    const { NODE_ENV, KAKAO_REDIRECT_URI_PROD, KAKAO_REDIRECT_URI_DEV } = process.env;
+    const originOrRef = (req.headers.origin || req.headers.referer || '').toLowerCase();
+
+    // 프론트가 로컬에서 호출하면 무조건 DEV 콜백 사용
+    if (originOrRef.includes('localhost:3000') || originOrRef.includes('127.0.0.1:3000')) {
+        return KAKAO_REDIRECT_URI_DEV || KAKAO_REDIRECT_URI_PROD;
+    }
+
+    // 그 외엔 환경 기준
+    const isProd = (NODE_ENV || '').toLowerCase().startsWith('production');
+    return isProd ? KAKAO_REDIRECT_URI_PROD : (KAKAO_REDIRECT_URI_DEV || KAKAO_REDIRECT_URI_PROD);
 };
 
 class AuthController {
     // 카카오 로그인 시작
     kakaoLogin = (req, res) => {
-        const redirectUri = getRedirectUri();
+        const redirectUri = getRedirectUri(req);
         const kakaoAuthUrl =
             `https://kauth.kakao.com/oauth/authorize?client_id=${process.env.KAKAO_REST_API_KEY}` +
             `&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
@@ -500,7 +509,7 @@ class AuthController {
                     statusCode: 400
                 });
             }
-            const redirectUri = getRedirectUri();
+            const redirectUri = getRedirectUri(req);
 
             // 1) 카카오 액세스 토큰 발급
             const tokenResponse = await fetch('https://kauth.kakao.com/oauth/token', {
