@@ -14,4 +14,7 @@ const router = express.Router();
 // 지원 접수
 router.post("/:helpId/apply", requireAuth, applicationsController.apply);
 
+// 지원자 목록 조회 (글쓴이만)
+router.get("/:helpId/apply-list", requireAuth, applicationsController.getApplyList);
+
 export { router as applicationsRoutes };
