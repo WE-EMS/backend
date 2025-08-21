@@ -90,6 +90,87 @@ export class ApplicationsRepository {
             _avg: { rating: true },
         });
     }
+
+    // 단일 지원 조회
+    async findApplicationById(applicationId) {
+        return prisma.helpApplication.findUnique({
+            where: { id: parseInt(applicationId) },
+            select: {
+                id: true,
+                helpRequestId: true,
+                userId: true,
+                status: true,
+            },
+        });
+    }
+
+    // 해당 요청글의 배정 여부
+    async findAssignmentByHelp(helpRequestId) {
+        return prisma.helpAssignment.findUnique({
+            where: { helpRequestId: parseInt(helpRequestId) },
+            select: {
+                id: true,
+                helpRequestId: true,
+                helpApplicationId: true,
+                helperId: true,
+                createdAt: true,
+            },
+        });
+    }
+
+    // 수락 트랜잭션
+    async acceptApplicationTransaction({ helpRequestId, applicationId, helperId }) {
+        const helpId = parseInt(helpRequestId);
+        const appId = parseInt(applicationId);
+        const helper = parseInt(helperId);
+
+        const [updatedApp, _, assignment, updatedHelp] = await prisma.$transaction([
+            // 대상 지원 수락(1)
+            prisma.helpApplication.update({
+                where: { id: appId },
+                data: { status: 1 },
+                select: { id: true, status: true },
+            }),
+            // 같은 글의 다른 지원자들은 거절(2)
+            prisma.helpApplication.updateMany({
+                where: {
+                    helpRequestId: helpId,
+                    id: { not: appId },
+                    status: 0, // 대기만 일괄 거절
+                },
+                data: { status: 2 },
+            }),
+            // 배정 생성 (요청당 1명 보장: @unique)
+            prisma.helpAssignment.create({
+                data: {
+                    helpRequestId: helpId,
+                    helpApplicationId: appId,
+                    helperId: helper,
+                },
+                select: { id: true },
+            }),
+            // 요청글 상태 배정(1)
+            prisma.helpRequest.update({
+                where: { id: helpId },
+                data: { status: 1 },
+                select: { id: true, status: true },
+            }),
+        ]);
+
+        return { updatedApp, assignment, updatedHelp };
+    }
+
+    // 거절 처리
+    async rejectApplication({ helpRequestId, applicationId }) {
+        const helpId = parseInt(helpRequestId);
+        const appId = parseInt(applicationId);
+
+        return prisma.helpApplication.update({
+            where: { id: appId },
+            data: { status: 2 },
+            select: { id: true, status: true },
+        });
+    }
 }
 
 export const applicationsRepository = new ApplicationsRepository();
