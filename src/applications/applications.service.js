@@ -208,6 +208,52 @@ export class ApplicationsService {
             },
         };
     }
+
+    // 수락 철회: 수락된 지원만 status=3으로 변경, 나머지는 유지
+    async kickAssignedHelper(helpId, requesterId) {
+        // 1) 글 존재 & 권한 체크
+        const help = await applicationsRepository.findHelpRequestById(helpId);
+        if (!help) {
+            throw { errorCode: "NOT_FOUND", reason: "해당 돌봄요청을 찾을 수 없습니다.", statusCode: 404 };
+        }
+        if (help.requesterId !== requesterId) {
+            throw { errorCode: "FORBIDDEN", reason: "해당 요청글의 작성자만 처리할 수 있습니다.", statusCode: 403 };
+        }
+
+        // 2) 현재 배정 조회 (요청당 1명 보장)
+        const assignment = await applicationsRepository.findAssignmentByHelp(help.id);
+        if (!assignment) {
+            throw { errorCode: "INVALID_OPERATION", reason: "현재 배정된 헬퍼가 없습니다.", statusCode: 409 };
+        }
+
+        // 3) 배정이 가리키는 지원 신청이 '수락(1)' 상태인지 확인
+        const app = await applicationsRepository.findApplicationById(assignment.helpApplicationId);
+        if (!app) {
+            throw { errorCode: "NOT_FOUND", reason: "배정된 지원 신청을 찾을 수 없습니다.", statusCode: 404 };
+        }
+        if (app.status !== 1) {
+            // 이미 거절/철회/대기 등 수락 상태가 아닌 경우
+            throw { errorCode: "INVALID_OPERATION", reason: "현재 수락 상태가 아니라 철회할 수 없습니다.", statusCode: 409 };
+        }
+
+        // 4) 지원 신청을 철회(3)로 변경 — 다른 상태/엔티티는 변경하지 않음
+        try {
+            const withdrawn = await applicationsRepository.withdrawAcceptedApplication(app.id);
+
+            // 상태 텍스트 헬퍼
+            const helpStatusText = { 0: "요청", 1: "배정", 2: "완료", 3: "취소" }[help.status] ?? "알 수 없음";
+            const appStatusText = { 0: "대기", 1: "수락", 2: "거절", 3: "철회" }[withdrawn.status] ?? "알 수 없음";
+
+            return {
+                message: "배정된 헬퍼의 수락이 철회되었습니다.",
+                help: { id: help.id, status: help.status, statusText: helpStatusText },
+                application: { id: withdrawn.id, status: withdrawn.status, statusText: appStatusText },
+            };
+        } catch (e) {
+            console.error("Helper kick update error:", e);
+            throw { errorCode: "UPDATE_ERROR", reason: "철회 처리 중 오류가 발생했습니다.", statusCode: 500 };
+        }
+    }
 }
 
 export const applicationsService = new ApplicationsService();
