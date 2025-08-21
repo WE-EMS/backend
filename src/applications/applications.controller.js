@@ -277,6 +277,130 @@ export class ApplicationsController {
             next(err);
         }
     }
+
+    /**
+   * @swagger
+   * /api/helps/{helpId}/accept:
+   *   post:
+   *     tags: [Applications]
+   *     summary: 지원 수락/거절 (글쓴이만)
+   *     description: 하나의 요청글에 대해 오직 한 명만 수락할 수 있습니다. 수락 시 다른 지원자는 자동으로 거절 처리됩니다. (그치만 만약 reject 입력시 거절되게끔도 해놓음)
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: helpId
+   *         required: true
+   *         schema: { type: integer }
+   *         description: 수락/거절할 대상이 속한 돌봄요청 ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [applicationId, decision]
+   *             properties:
+   *               applicationId:
+   *                 type: integer
+   *                 example: 12
+   *                 description: 수락/거절 대상 지원 신청의 ID
+   *               decision:
+   *                 type: string
+   *                 enum: [accept, reject]
+   *                 example: accept
+   *                 description: "처리 동작 (accept: 수락, reject: 거절)"
+   *     responses:
+   *       200:
+   *         description: 처리 성공
+   *         content:
+   *           application/json:
+   *             example:
+   *               resultType: SUCCESS
+   *               error: null
+   *               data:
+   *                 message: "지원이 수락되었습니다."
+   *                 help:
+   *                   id: 16
+   *                   status: 1
+   *                   statusText: "배정"
+   *                 application:
+   *                   id: 12
+   *                   status: 1
+   *                   statusText: "수락"
+   *       401:
+ *         description: 인증 필요
+ *         content:
+ *           application/json:
+ *             example:
+ *               resultType: FAIL
+ *               error:
+ *                 errorCode: UNAUTHORIZED
+ *                 reason: "로그인이 필요합니다."
+ *                 data: null
+ *               success: null
+ *       403:
+ *         description: 권한 없음(글쓴이 아님)
+ *         content:
+ *           application/json:
+ *             example:
+ *               resultType: FAIL
+ *               error:
+ *                 errorCode: FORBIDDEN
+ *                 reason: "해당 요청글의 작성자만 조회할 수 있습니다."
+ *                 data: null
+ *               success: null
+ *       404:
+ *         description: 글 없음
+ *         content:
+ *           application/json:
+ *             example:
+ *               resultType: FAIL
+ *               error:
+ *                 errorCode: NOT_FOUND
+ *                 reason: "해당 돌봄요청을 찾을 수 없습니다."
+ *                 data: null
+ *               success: null
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             example:
+ *               resultType: FAIL
+ *               error:
+ *                 errorCode: FETCH_ERROR
+ *                 reason: "지원자 조회 중 오류가 발생했습니다."
+ *                 data: null
+ *               success: null
+   */
+    async acceptOrReject(req, res, next) {
+        try {
+            if (!req.user) {
+                return res.error({
+                    errorCode: "UNAUTHORIZED",
+                    reason: "로그인이 필요합니다.",
+                    statusCode: 401,
+                });
+            }
+
+            const { helpId } = req.params;
+            const requesterId = req.user.id;
+            const { applicationId, decision } = req.body || {};
+
+            const data = await applicationsService.decideApplication(helpId, requesterId, {
+                applicationId,
+                decision,
+            });
+
+            return res.status(200).json({
+                resultType: "SUCCESS",
+                error: null,
+                data,
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export const applicationsController = new ApplicationsController();
