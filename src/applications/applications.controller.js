@@ -401,6 +401,134 @@ export class ApplicationsController {
             next(err);
         }
     }
+
+    /**
+   * @swagger
+   * /api/helps/{helpId}/helper-kick:
+   *   put:
+   *     tags: [Applications]
+   *     summary: 수락 철회(헬퍼 킥) — 글쓴이만
+   *     description: >
+   *       해당 돌봄요청에 현재 배정된 헬퍼의 지원 신청을 **철회(status=3)** 로만 변경합니다.  
+   *       HelpRequest.status 및 다른 지원자들의 상태는 변경하지 않습니다. (상호리뷰를 위해 원상태 유지)
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: helpId
+   *         required: true
+   *         schema: { type: integer }
+   *         description: 철회 처리할 배정이 연결된 돌봄요청 ID
+   *     responses:
+   *       200:
+   *         description: 철회 처리 성공
+   *         content:
+   *           application/json:
+   *             example:
+   *               resultType: SUCCESS
+   *               error: null
+   *               data:
+   *                 message: "배정된 헬퍼의 수락이 철회되었습니다."
+   *                 help:
+   *                   id: 16
+   *                   status: 1
+   *                   statusText: "배정"
+   *                 application:
+   *                   id: 12
+   *                   status: 3
+   *                   statusText: "철회"
+   *       401:
+   *         description: 인증 필요
+   *         content:
+   *           application/json:
+   *             example:
+   *               resultType: FAIL
+   *               error:
+   *                 errorCode: UNAUTHORIZED
+   *                 reason: "로그인이 필요합니다."
+   *                 data: null
+   *               success: null
+   *       403:
+   *         description: 권한 없음(글쓴이 아님)
+   *         content:
+   *           application/json:
+   *             example:
+   *               resultType: FAIL
+   *               error:
+   *                 errorCode: FORBIDDEN
+   *                 reason: "해당 요청글의 작성자만 처리할 수 있습니다."
+   *                 data: null
+   *               success: null
+   *       404:
+   *         description: 글/배정/신청 없음
+   *         content:
+   *           application/json:
+   *             examples:
+   *               notFoundHelp:
+   *                 value:
+   *                   resultType: FAIL
+   *                   error:
+   *                     errorCode: NOT_FOUND
+   *                     reason: "해당 돌봄요청을 찾을 수 없습니다."
+   *                     data: null
+   *                   success: null
+   *       409:
+   *         description: 현재 배정 상태 아님 등 처리 불가 상황
+   *         content:
+   *           application/json:
+   *             examples:
+   *               noAssignment:
+   *                 value:
+   *                   resultType: FAIL
+   *                   error:
+   *                     errorCode: INVALID_OPERATION
+   *                     reason: "현재 배정된 헬퍼가 없습니다."
+   *                     data: null
+   *                   success: null
+   *               notAccepted:
+   *                 value:
+   *                   resultType: FAIL
+   *                   error:
+   *                     errorCode: INVALID_OPERATION
+   *                     reason: "현재 수락 상태가 아니라 철회할 수 없습니다."
+   *                     data: null
+   *                   success: null
+   *       500:
+   *         description: 서버 오류
+   *         content:
+   *           application/json:
+   *             example:
+   *               resultType: FAIL
+   *               error:
+   *                 errorCode: UPDATE_ERROR
+   *                 reason: "철회 처리 중 오류가 발생했습니다."
+   *                 data: null
+   *               success: null
+   */
+    async helperKick(req, res, next) {
+        try {
+            if (!req.user) {
+                return res.error({
+                    errorCode: "UNAUTHORIZED",
+                    reason: "로그인이 필요합니다.",
+                    statusCode: 401,
+                });
+            }
+
+            const { helpId } = req.params;
+            const requesterId = req.user.id;
+
+            const data = await applicationsService.kickAssignedHelper(helpId, requesterId);
+
+            return res.status(200).json({
+                resultType: "SUCCESS",
+                error: null,
+                data,
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export const applicationsController = new ApplicationsController();

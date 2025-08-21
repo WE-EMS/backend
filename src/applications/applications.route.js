@@ -20,4 +20,7 @@ router.get("/:helpId/apply-list", requireAuth, applicationsController.getApplyLi
 // 지원 수락/거절 (글쓴이만)
 router.post("/:helpId/accept", requireAuth, applicationsController.acceptOrReject);
 
+// 수락 철회(헬퍼 킥) (글쓴이만)
+router.put("/:helpId/helper-kick", requireAuth, applicationsController.helperKick);
+
 export { router as applicationsRoutes };
