@@ -171,6 +171,15 @@ export class ApplicationsRepository {
             select: { id: true, status: true },
         });
     }
+
+    // 수락된 지원을 철회(3)로 변경
+    async withdrawAcceptedApplication(applicationId) {
+        return prisma.helpApplication.update({
+            where: { id: parseInt(applicationId) },
+            data: { status: 3 }, // 철회
+            select: { id: true, status: true },
+        });
+    }
 }
 
 export const applicationsRepository = new ApplicationsRepository();
