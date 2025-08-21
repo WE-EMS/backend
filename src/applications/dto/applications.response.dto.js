@@ -22,3 +22,58 @@ export class ApplicationResponseDto {
         return map[status] ?? "알 수 없음";
     }
 }
+
+// 지원자 목록용 DTO들
+export class ApplyListResponseDto {
+    constructor(help, applications, reviewStatsByUser) {
+        this.help = {
+            id: help.id,
+            helpType: help.helpType,
+            helpTypeText: this._helpTypeText(help.helpType),
+            status: help.status,
+            statusText: this._helpStatusText(help.status),
+        };
+
+        this.totalApplicants = applications.length;
+        this.applicants = applications.map((a) => {
+            const stats = reviewStatsByUser[a.userId] || {
+                reviewCount: 0,
+                ratingAvg: 0,
+            };
+            return new ApplicantListItemDto(a, stats);
+        });
+    }
+
+    _helpTypeText(type) {
+        const map = { 1: "등하원", 2: "놀이", 3: "동행", 4: "기타" };
+        return map[type] ?? "알 수 없음";
+    }
+    _helpStatusText(status) {
+        const map = { 0: "요청", 1: "배정", 2: "완료", 3: "취소" };
+        return map[status] ?? "알 수 없음";
+    }
+}
+
+export class ApplicantListItemDto {
+    constructor(app, stats) {
+        this.applicationId = app.id;
+        this.status = app.status;
+        this.statusText = this._statusText(app.status);
+        this.message = app.message ?? null;
+        this.createdAt = app.createdAt;
+
+        this.helper = {
+            id: app.helper?.id ?? app.userId,
+            nickname: app.helper?.nickname ?? "알수없음",
+            profileImageUrl:
+                app.helper?.imageUrl || app.helper?.kakaoProfileImageUrl || null,
+            reviewCount: stats.reviewCount ?? 0,
+            ratingAvg: stats.ratingAvg ?? 0,
+        };
+    }
+
+    _statusText(status) {
+        const map = { 0: "대기", 1: "수락", 2: "거절", 3: "철회" };
+        return map[status] ?? "알 수 없음";
+    }
+}

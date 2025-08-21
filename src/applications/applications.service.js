@@ -1,6 +1,6 @@
 import { applicationsRepository } from "./applications.repository.js";
 import { CreateApplicationRequestDto } from "./dto/applications.request.dto.js";
-import { ApplicationResponseDto } from "./dto/applications.response.dto.js";
+import { ApplicationResponseDto, ApplyListResponseDto } from "./dto/applications.response.dto.js";
 
 export class ApplicationsService {
     async applyToHelpRequest(helpId, helperId, body) {
@@ -78,6 +78,51 @@ export class ApplicationsService {
                 statusCode: 500,
             };
         }
+    }
+
+    // 지원자 목록
+    async getApplyList(helpId, requesterId) {
+        // 1) 글 요약 조회 (작성자/상태/타입)
+        const help = await applicationsRepository.findHelpRequestSummary(helpId);
+        if (!help) {
+            throw {
+                errorCode: "NOT_FOUND",
+                reason: "해당 돌봄요청을 찾을 수 없습니다.",
+                statusCode: 404,
+            };
+        }
+        // 2) 권한 체크: 글쓴이만 가능
+        if (help.requesterId !== requesterId) {
+            throw {
+                errorCode: "FORBIDDEN",
+                reason: "해당 요청글의 작성자만 조회할 수 있습니다.",
+                statusCode: 403,
+            };
+        }
+
+        // 3) 지원 목록 + 헬퍼 기본 정보
+        const applications = await applicationsRepository.listApplicationsByHelp(
+            helpId
+        );
+
+        // 4) 리뷰 통계(리뷰 개수/평균 별점) — 여러 사용자 한번에 groupBy
+        const helperIds = applications.map((a) => a.userId);
+        let reviewStatsByUser = {};
+        if (helperIds.length > 0) {
+            const stats = await applicationsRepository.getReviewStatsByUsers(
+                helperIds
+            );
+            reviewStatsByUser = stats.reduce((acc, s) => {
+                acc[s.revieweeId] = {
+                    reviewCount: s._count?.id ?? 0,
+                    ratingAvg: s._avg?.rating ? Number(s._avg.rating.toFixed(2)) : 0,
+                };
+                return acc;
+            }, {});
+        }
+
+        // 5) DTO 매핑
+        return new ApplyListResponseDto(help, applications, reviewStatsByUser);
     }
 }
 
