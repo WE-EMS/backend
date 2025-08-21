@@ -1,6 +1,7 @@
 import { applicationsService } from "./applications.service.js";
 
-/**
+export class ApplicationsController {
+    /**
  * @swagger
  * /api/helps/{helpId}/apply:
  *   post:
@@ -116,7 +117,6 @@ import { applicationsService } from "./applications.service.js";
  *                     data: { type: object, nullable: true, example: null }
  *                 success: { type: object, nullable: true, example: null }
  */
-export class ApplicationsController {
     async apply(req, res, next) {
         try {
             if (!req.user) {
@@ -141,6 +141,137 @@ export class ApplicationsController {
                 data: {
                     message: "돌봄 참여가 정상적으로 신청되었습니다."
                 }
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    // 지원자 목록
+    async getApplyList(req, res, next) {
+        /**
+     * @swagger
+     * /api/helps/{helpId}/apply-list:
+     *   get:
+     *     tags: [Applications]
+     *     summary: 지원자 목록 조회 (글쓴이만)
+     *     description: 요청글 작성자만 자신의 글에 지원한 지원자 목록을 조회합니다.
+     *     security:
+     *       - bearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: helpId
+     *         required: true
+     *         schema: { type: integer }
+     *         description: 지원자 목록을 조회할 돌봄요청 ID
+     *     responses:
+     *       200:
+     *         description: 조회 성공
+     *         content:
+     *           application/json:
+     *             examples:
+     *               noApplicants:
+     *                 summary: 지원자가 없음
+     *                 value:
+     *                   resultType: SUCCESS
+     *                   error: null
+     *                   data:
+     *                     help:
+     *                       id: 6
+     *                       helpType: 4
+     *                       helpTypeText: "기타"
+     *                       status: 0
+     *                       statusText: "요청"
+     *                     totalApplicants: 0
+     *                     applicants: []
+     *               withApplicants:
+     *                 summary: 지원자가 있음
+     *                 value:
+     *                   resultType: SUCCESS
+     *                   error: null
+     *                   data:
+     *                     help:
+     *                       id: 16
+     *                       helpType: 1
+     *                       helpTypeText: "등하원"
+     *                       status: 0
+     *                       statusText: "요청"
+     *                     totalApplicants: 1
+     *                     applicants:
+     *                       - applicationId: 1
+     *                         status: 0
+     *                         statusText: "대기"
+     *                         message: "시간 맞춰 안전하게 모시겠습니다!"
+     *                         createdAt: "2025-08-20T07:30:00.618Z"
+     *                         helper:
+     *                           id: 3
+     *                           nickname: "염둘"
+     *                           profileImageUrl: null
+     *                           reviewCount: 0
+     *                           ratingAvg: 0
+     *       401:
+     *         description: 인증 필요
+     *         content:
+     *           application/json:
+     *             example:
+     *               resultType: FAIL
+     *               error:
+     *                 errorCode: UNAUTHORIZED
+     *                 reason: "로그인이 필요합니다."
+     *                 data: null
+     *               success: null
+     *       403:
+     *         description: 권한 없음(글쓴이 아님)
+     *         content:
+     *           application/json:
+     *             example:
+     *               resultType: FAIL
+     *               error:
+     *                 errorCode: FORBIDDEN
+     *                 reason: "해당 요청글의 작성자만 조회할 수 있습니다."
+     *                 data: null
+     *               success: null
+     *       404:
+     *         description: 글 없음
+     *         content:
+     *           application/json:
+     *             example:
+     *               resultType: FAIL
+     *               error:
+     *                 errorCode: NOT_FOUND
+     *                 reason: "해당 돌봄요청을 찾을 수 없습니다."
+     *                 data: null
+     *               success: null
+     *       500:
+     *         description: 서버 오류
+     *         content:
+     *           application/json:
+     *             example:
+     *               resultType: FAIL
+     *               error:
+     *                 errorCode: FETCH_ERROR
+     *                 reason: "지원자 조회 중 오류가 발생했습니다."
+     *                 data: null
+     *               success: null
+     */
+        try {
+            if (!req.user) {
+                return res.error({
+                    errorCode: "UNAUTHORIZED",
+                    reason: "로그인이 필요합니다.",
+                    statusCode: 401,
+                });
+            }
+
+            const { helpId } = req.params;
+            const requesterId = req.user.id;
+
+            const data = await applicationsService.getApplyList(helpId, requesterId);
+
+            return res.status(200).json({
+                resultType: "SUCCESS",
+                error: null,
+                data,
             });
         } catch (err) {
             next(err);
