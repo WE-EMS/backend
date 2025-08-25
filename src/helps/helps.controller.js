@@ -1107,6 +1107,145 @@ export class HelpsController {
         }
     }
 
+    /**
+ * @swagger
+ * /api/helps/complete/me:
+ *   get:
+ *     tags: [Helps]
+ *     summary: 내가 요청/참여한 완료된 돌봄 목록 조회
+ *     description: "로그인한 사용자가 요청하거나 참여한 완료된 돌봄(status=2) 목록을 조회합니다."
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: 페이지 번호
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: 페이지당 항목 수
+ *     responses:
+ *       200:
+ *         description: 완료된 돌봄 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultType:
+ *                   type: string
+ *                   example: SUCCESS
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *                   example: null
+ *                 success:
+ *                   type: object
+ *                   properties:
+ *                     requests:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 1
+ *                           roleType:
+ *                             type: string
+ *                             enum: ["요청", "참여"]
+ *                             example: "요청"
+ *                           helpType:
+ *                             type: integer
+ *                             example: 1
+ *                           helpTypeText:
+ *                             type: string
+ *                             example: "등/하원 돌봄"
+ *                           serviceDate:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2025-08-20T00:00:00.000Z"
+ *                           startTime:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "1970-01-01T09:30:00.000Z"
+ *                           endTime:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "1970-01-01T11:00:00.000Z"
+ *                           durationMinutes:
+ *                             type: integer
+ *                             example: 90
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         page:
+ *                           type: integer
+ *                           example: 1
+ *                         totalPage:
+ *                           type: integer
+ *                           example: 2
+ *       401:
+ *         description: 인증 필요 (로그인 안 됨)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultType:
+ *                   type: string
+ *                   example: FAIL
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     errorCode:
+ *                       type: string
+ *                       example: UNAUTHORIZED
+ *                     reason:
+ *                       type: string
+ *                       example: "로그인이 필요합니다."
+ *                     data:
+ *                       type: object
+ *                       nullable: true
+ *                 success:
+ *                   nullable: true
+ *                   example: null
+ */
+    async getMyCompleteHelps(req, res, next) {
+        try {
+            if (!req.user) {
+                return res.error({
+                    errorCode: "UNAUTHORIZED",
+                    reason: "로그인이 필요합니다.",
+                    statusCode: 401
+                });
+            }
+
+            const page = parseInt(req.query.page ?? "1");
+            const size = parseInt(req.query.size ?? "10");
+
+            const result = await helpsService.getMyCompleteHelps({
+                userId: req.user.id,
+                page,
+                size
+            });
+
+            return res.status(200).json({
+                resultType: "SUCCESS",
+                error: null,
+                success: {
+                    requests: result.requests,
+                    pagination: result.pagination
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 

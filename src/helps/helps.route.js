@@ -31,6 +31,8 @@ router.put("/:helpId", requireAuth, helpRequestImageUploader.single('image'), he
 // 돌봄요청 글 삭제
 router.delete("/:helpId", requireAuth, helpsController.deleteHelpRequest);
 
+// 내가 요청/참여한 완료된 돌봄 목록 조회
+router.get("/complete/me", requireAuth, helpsController.getMyCompleteHelps);
 
 // applications 라우트
 router.use("/", applicationsRoutes);

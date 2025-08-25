@@ -190,3 +190,48 @@ export class MyHelpRequestListResponseDto {
         };
     }
 }
+
+// 완료된 돌봄 목록 아이템 DTO
+export class MyCompleteHelpItemDto {
+    constructor(helpData) {
+        this.id = helpData.id;
+        this.roleType = helpData.roleType; // "요청" 또는 "참여"
+        this.helpType = helpData.helpType;
+        this.helpTypeText = this._getHelpTypeText(helpData.helpType);
+        this.serviceDate = helpData.serviceDate;
+        this.startTime = helpData.startTime;
+        this.endTime = helpData.endTime;
+        this.durationMinutes = this._calcDurationMinutes(helpData.startTime, helpData.endTime);
+    }
+
+    _calcDurationMinutes(start, end) {
+        if (!start || !end) return 0;
+        try {
+            const s = new Date(start);
+            const e = new Date(end);
+            return Math.max(0, Math.round((e - s) / (1000 * 60)));
+        } catch {
+            return 0;
+        }
+    }
+
+    _getHelpTypeText(helpType) {
+        const types = {
+            1: "등/하원 돌봄",
+            2: "놀이 돌봄",
+            3: "동행 돌봄",
+            4: "기타 돌봄"
+        };
+        return types[helpType] || "알 수 없음";
+    }
+}
+
+export class MyCompleteHelpsResponseDto {
+    constructor(helps, page, totalPage) {
+        this.requests = helps.map(help => new MyCompleteHelpItemDto(help));
+        this.pagination = {
+            page: page,
+            totalPage: totalPage
+        };
+    }
+}

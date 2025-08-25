@@ -77,3 +77,42 @@ export class ApplicantListItemDto {
         return map[status] ?? "알 수 없음";
     }
 }
+
+// 내 돌봄 참여 목록 아이템 DTO
+export class MyApplicationItemDto {
+    constructor(app, reviewStatsByUser) {
+        this.applicationId = app.id;
+        this.status = app.status;
+        this.statusText = this._statusText(app.status);
+        this.createdAt = app.createdAt;
+
+        this.help = {
+            id: app.helpRequest.id,
+            helpType: app.helpRequest.helpType,
+            helpTypeText: this._helpTypeText(app.helpRequest.helpType),
+            serviceDate: app.helpRequest.serviceDate,
+            startTime: app.helpRequest.startTime,
+            endTime: app.helpRequest.endTime,
+            requester: {
+                id: app.helpRequest.requester.id,
+                nickname: app.helpRequest.requester.nickname,
+                profileImageUrl:
+                    app.helpRequest.requester.imageUrl ||
+                    app.helpRequest.requester.kakaoProfileImageUrl ||
+                    null,
+                reviewCount: reviewStatsByUser[app.helpRequest.requester.id]?.reviewCount ?? 0,
+                ratingAvg: reviewStatsByUser[app.helpRequest.requester.id]?.ratingAvg ?? 0,
+            },
+        };
+    }
+
+    _statusText(status) {
+        const map = { 0: "대기", 1: "수락", 2: "거절", 3: "철회" };
+        return map[status] ?? "알 수 없음";
+    }
+
+    _helpTypeText(type) {
+        const map = { 1: "등하원", 2: "놀이", 3: "동행", 4: "기타" };
+        return map[type] ?? "알 수 없음";
+    }
+}
