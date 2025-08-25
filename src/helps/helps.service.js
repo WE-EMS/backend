@@ -1,6 +1,6 @@
 import { helpsRepository } from "./helps.repository.js";
 import { CreateHelpRequestDto } from "./dto/helps.request.dto.js";
-import { HelpRequestResponseDto, HelpRequestListResponseDto, MyHelpRequestListResponseDto } from "./dto/helps.response.dto.js";
+import { HelpRequestResponseDto, HelpRequestListResponseDto, MyHelpRequestListResponseDto, MyCompleteHelpsResponseDto } from "./dto/helps.response.dto.js";
 
 export class HelpsService {
     // 돌봄요청 생성
@@ -238,6 +238,31 @@ export class HelpsService {
             throw {
                 errorCode: "FETCH_ERROR",
                 reason: "내 돌봄요청 조회 중 오류가 발생했습니다.",
+                statusCode: 500
+            };
+        }
+    }
+
+    // 내가 요청/참여한 완료된 돌봄 목록 조회
+    async getMyCompleteHelps({ userId, page = 1, size = 10 }) {
+        const skip = (page - 1) * size;
+        const take = size;
+
+        try {
+            const { items, total } = await helpsRepository.findMyCompleteHelps({
+                userId,
+                skip,
+                take,
+                orderBy: { serviceDate: "desc" }
+            });
+
+            const totalPage = Math.ceil(total / size);
+            return new MyCompleteHelpsResponseDto(items, page, totalPage);
+        } catch (error) {
+            console.error('My complete helps fetch error:', error);
+            throw {
+                errorCode: "FETCH_ERROR",
+                reason: "완료된 돌봄 목록 조회 중 오류가 발생했습니다.",
                 statusCode: 500
             };
         }

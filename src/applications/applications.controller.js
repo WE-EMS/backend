@@ -529,6 +529,102 @@ export class ApplicationsController {
             next(err);
         }
     }
+
+    /**
+         * @swagger
+         * /api/helps/apply/me:
+         *   get:
+         *     tags: [Applications]
+         *     summary: 내 돌봄 참여 목록 조회
+         *     description: 로그인한 사용자가 지원한 돌봄요청들의 목록을 페이지네이션으로 조회합니다.
+         *     security:
+         *       - bearerAuth: []
+         *     parameters:
+         *       - in: query
+         *         name: page
+         *         schema: { type: integer, minimum: 1, default: 1 }
+         *         description: "페이지 번호 (기본값: 1)"
+         *       - in: query
+         *         name: size
+         *         schema: { type: integer, minimum: 1, maximum: 50, default: 10 }
+         *         description: "페이지 크기 (기본값: 10, 최대: 50)"
+         *     responses:
+         *       200:
+         *         description: 조회 성공
+         *         content:
+         *           application/json:
+         *             example:
+         *               resultType: SUCCESS
+         *               error: null
+         *               data:
+         *                 applications:
+         *                   - applicationId: 15
+         *                     status: 1
+         *                     statusText: "수락"
+         *                     createdAt: "2025-08-25T10:30:00.000Z"
+         *                     help:
+         *                       id: 20
+         *                       helpType: 1
+         *                       helpTypeText: "등하원"
+         *                       serviceDate: "2025-08-20T00:00:00.000Z"
+         *                       startTime: "1970-01-01T01:30:00.000Z"
+         *                       endTime: "1970-01-01T03:00:00.000Z"
+         *                       requester:
+         *                         id: 5
+         *                         nickname: "김엄마"
+         *                         profileImageUrl: "https://example.com/profile.jpg"
+         *                         reviewCount: 12
+         *                         ratingAvg: 4.8
+         *                 page: 1
+         *                 totalPages: 3
+         *       401:
+         *         description: 인증 필요
+         *         content:
+         *           application/json:
+         *             example:
+         *               resultType: FAIL
+         *               error:
+         *                 errorCode: UNAUTHORIZED
+         *                 reason: "로그인이 필요합니다."
+         *                 data: null
+         *               success: null
+         *       500:
+         *         description: 서버 오류
+         *         content:
+         *           application/json:
+         *             example:
+         *               resultType: FAIL
+         *               error:
+         *                 errorCode: FETCH_ERROR
+         *                 reason: "돌봄 참여 목록 조회 중 오류가 발생했습니다."
+         *                 data: null
+         *               success: null
+         */
+    async getMyApplications(req, res, next) {
+        try {
+            if (!req.user) {
+                return res.error({
+                    errorCode: "UNAUTHORIZED",
+                    reason: "로그인이 필요합니다.",
+                    statusCode: 401,
+                });
+            }
+
+            const userId = req.user.id;
+            const page = parseInt(req.query.page) || 1;
+            const size = Math.min(parseInt(req.query.size) || 10, 50);
+
+            const data = await applicationsService.getMyApplications(userId, { page, size });
+
+            return res.status(200).json({
+                resultType: "SUCCESS",
+                error: null,
+                data,
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export const applicationsController = new ApplicationsController();

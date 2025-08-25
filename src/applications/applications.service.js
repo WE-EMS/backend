@@ -1,6 +1,6 @@
 import { applicationsRepository } from "./applications.repository.js";
 import { CreateApplicationRequestDto } from "./dto/applications.request.dto.js";
-import { ApplicationResponseDto, ApplyListResponseDto } from "./dto/applications.response.dto.js";
+import { ApplicationResponseDto, ApplyListResponseDto, MyApplicationItemDto } from "./dto/applications.response.dto.js";
 
 export class ApplicationsService {
     async applyToHelpRequest(helpId, helperId, body) {
@@ -252,6 +252,55 @@ export class ApplicationsService {
         } catch (e) {
             console.error("Helper kick update error:", e);
             throw { errorCode: "UPDATE_ERROR", reason: "철회 처리 중 오류가 발생했습니다.", statusCode: 500 };
+        }
+    }
+
+    // 내 지원 목록 조회
+    async getMyApplications(userId, { page, size }) {
+        try {
+            // 1) 페이지네이션으로 지원 목록 조회
+            const [applications, totalCount] = await Promise.all([
+                applicationsRepository.findMyApplicationsWithPagination(userId, { page, size }),
+                applicationsRepository.countMyApplications(userId)
+            ]);
+
+            // 2) 요청자들의 리뷰 통계 조회
+            const requesterIds = applications.map(app => app.helpRequest.requester.id);
+            let reviewStatsByUser = {};
+
+            if (requesterIds.length > 0) {
+                const stats = await applicationsRepository.getReviewStatsByUsers(requesterIds);
+                reviewStatsByUser = stats.reduce((acc, s) => {
+                    acc[s.revieweeId] = {
+                        reviewCount: s._count?.id ?? 0,
+                        ratingAvg: s._avg?.rating ? Number(s._avg.rating.toFixed(2)) : 0,
+                    };
+                    return acc;
+                }, {});
+            }
+
+            // 3) 페이지네이션 정보 계산
+            const totalPages = Math.ceil(totalCount / size);
+            const hasNext = page < totalPages;
+            const hasPrev = page > 1;
+
+            // 4) DTO 변환
+            const formattedApplications = applications.map(app =>
+                new MyApplicationItemDto(app, reviewStatsByUser)
+            );
+
+            return {
+                applications: formattedApplications,
+                page,
+                totalPages,
+            };
+        } catch (e) {
+            console.error("Get my applications error:", e);
+            throw {
+                errorCode: "FETCH_ERROR",
+                reason: "돌봄 참여 목록 조회 중 오류가 발생했습니다.",
+                statusCode: 500,
+            };
         }
     }
 }
