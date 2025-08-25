@@ -180,6 +180,47 @@ export class ApplicationsRepository {
             select: { id: true, status: true },
         });
     }
+
+    // 내 지원 목록 조회 (페이지네이션)
+    async findMyApplicationsWithPagination(userId, { page, size }) {
+        const skip = (page - 1) * size;
+
+        return prisma.helpApplication.findMany({
+            where: { userId: parseInt(userId) },
+            orderBy: { createdAt: "desc" },
+            skip,
+            take: size,
+            select: {
+                id: true,
+                status: true,
+                createdAt: true,
+                helpRequest: {
+                    select: {
+                        id: true,
+                        helpType: true,
+                        serviceDate: true,
+                        startTime: true,
+                        endTime: true,
+                        requester: {
+                            select: {
+                                id: true,
+                                nickname: true,
+                                imageUrl: true,
+                                kakaoProfileImageUrl: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    // 내 지원 목록 총 개수
+    async countMyApplications(userId) {
+        return prisma.helpApplication.count({
+            where: { userId: parseInt(userId) },
+        });
+    }
 }
 
 export const applicationsRepository = new ApplicationsRepository();

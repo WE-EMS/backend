@@ -23,4 +23,7 @@ router.post("/:helpId/accept", requireAuth, applicationsController.acceptOrRejec
 // 수락 철회(헬퍼 킥) (글쓴이만)
 router.put("/:helpId/helper-kick", requireAuth, applicationsController.helperKick);
 
+// 내 돌봄 참여 목록 조회
+router.get("/apply/me", requireAuth, applicationsController.getMyApplications);
+
 export { router as applicationsRoutes };

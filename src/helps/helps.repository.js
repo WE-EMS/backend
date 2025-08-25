@@ -188,6 +188,88 @@ export class HelpsRepository {
 
         return { items, total };
     }
+
+    // 내가 요청하거나 참여한 완료된 돌봄 목록 조회
+    async findMyCompleteHelps({ userId, skip, take, orderBy }) {
+        // 먼저 전체 개수를 구하기 위해 카운트 쿼리
+        const [requestedCount, participatedCount] = await Promise.all([
+            prisma.helpRequest.count({
+                where: {
+                    requesterId: userId,
+                    status: 2 // 완료
+                }
+            }),
+            prisma.helpAssignment.count({
+                where: {
+                    helperId: userId,
+                    helpRequest: {
+                        status: 2 // 완료
+                    }
+                }
+            })
+        ]);
+
+        const total = requestedCount + participatedCount;
+
+        // 두 개의 쿼리를 Union으로 합치기
+        const [requestedHelps, participatedHelps] = await Promise.all([
+            // 내가 요청한 완료된 돌봄
+            prisma.helpRequest.findMany({
+                where: {
+                    requesterId: userId,
+                    status: 2 // 완료
+                },
+                select: {
+                    id: true,
+                    helpType: true,
+                    serviceDate: true,
+                    startTime: true,
+                    endTime: true,
+                    createdAt: true,
+                    updatedAt: true
+                }
+            }),
+            // 내가 참여한 완료된 돌봄 (HelpAssignment를 통해)
+            prisma.helpAssignment.findMany({
+                where: {
+                    helperId: userId,
+                    helpRequest: {
+                        status: 2 // 완료
+                    }
+                },
+                include: {
+                    helpRequest: {
+                        select: {
+                            id: true,
+                            helpType: true,
+                            serviceDate: true,
+                            startTime: true,
+                            endTime: true,
+                            createdAt: true,
+                            updatedAt: true
+                        }
+                    }
+                }
+            })
+        ]);
+
+        // 데이터 통합 및 역할 타입 추가
+        const allHelps = [
+            ...requestedHelps.map(help => ({ ...help, roleType: "요청" })),
+            ...participatedHelps.map(assignment => ({
+                ...assignment.helpRequest,
+                roleType: "참여"
+            }))
+        ];
+
+        // 서비스 날짜 기준 내림차순 정렬
+        allHelps.sort((a, b) => new Date(b.serviceDate) - new Date(a.serviceDate));
+
+        // 페이지네이션 적용
+        const items = allHelps.slice(skip, skip + take);
+
+        return { items, total };
+    }
 }
 
 export const helpsRepository = new HelpsRepository();
