@@ -82,6 +82,7 @@ export const swaggerOptions = {
         './src/users/*.js',
         './src/helps/*.js',
         './src/applications/*.js',
+        './src/reviews/*.js',
         './src/store/*.js',
         './src/index.js'
     ]
