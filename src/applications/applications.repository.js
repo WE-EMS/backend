@@ -57,11 +57,13 @@ export class ApplicationsRepository {
         });
     }
 
-    // 지원 목록 + helper 기본정보
-    async listApplicationsByHelp(helpRequestId) {
+    // 지원 목록 + helper 기본정보 (페이지네이션)
+    async listApplicationsByHelpWithPagination(helpRequestId, { skip, take }) {
         return prisma.helpApplication.findMany({
             where: { helpRequestId: parseInt(helpRequestId) },
             orderBy: { createdAt: "desc" },
+            skip,
+            take,
             select: {
                 id: true,
                 userId: true,
@@ -77,6 +79,13 @@ export class ApplicationsRepository {
                     },
                 },
             },
+        });
+    }
+
+    // 총 지원자 수
+    async countApplicationsByHelp(helpRequestId) {
+        return prisma.helpApplication.count({
+            where: { helpRequestId: parseInt(helpRequestId) },
         });
     }
 

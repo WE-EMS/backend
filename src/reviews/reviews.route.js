@@ -20,4 +20,13 @@ router.post("/assignments/:assignmentId", requireAuth, reviewController.createFo
 // (테스트용) 3일 경과 자동 완료
 router.post('/auto-complete', reviewController.autoCompleteHelps);
 
+// 내 리뷰 작성 가능 목록
+router.get("/me", requireAuth, reviewController.getMyReviewables);
+
+// 내가 쓴 리뷰 목록
+router.get("/me/written", requireAuth, reviewController.getMyWritten);
+
+// 내가 받은 리뷰 목록
+router.get("/me/received", requireAuth, reviewController.getMyReceived);
+
 export { router as reviewsRoutes };

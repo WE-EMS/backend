@@ -80,8 +80,8 @@ export class ApplicationsService {
         }
     }
 
-    // 지원자 목록
-    async getApplyList(helpId, requesterId) {
+    // 지원자 목록 (페이지네이션)
+    async getApplyList(helpId, requesterId, { page = 1, size = 10 } = {}) {
         // 1) 글 요약 조회 (작성자/상태/타입)
         const help = await applicationsRepository.findHelpRequestSummary(helpId);
         if (!help) {
@@ -100,10 +100,12 @@ export class ApplicationsService {
             };
         }
 
-        // 3) 지원 목록 + 헬퍼 기본 정보
-        const applications = await applicationsRepository.listApplicationsByHelp(
-            helpId
-        );
+        // 3) 지원 목록 + 헬퍼 기본 정보 (페이지네이션)
+        const skip = (page - 1) * size;
+        const [applications, totalCount] = await Promise.all([
+            applicationsRepository.listApplicationsByHelpWithPagination(helpId, { skip, take: size }),
+            applicationsRepository.countApplicationsByHelp(helpId),
+        ]);
 
         // 4) 리뷰 통계(리뷰 개수/평균 별점) — 여러 사용자 한번에 groupBy
         const helperIds = applications.map((a) => a.userId);
@@ -121,11 +123,12 @@ export class ApplicationsService {
             }, {});
         }
 
-        // 5) DTO 매핑
-        return new ApplyListResponseDto(help, applications, reviewStatsByUser);
+        // 5) DTO 매핑 + 페이지네이션
+        const totalPages = Math.max(1, Math.ceil(totalCount / size));
+        return new ApplyListResponseDto(help, applications, reviewStatsByUser, { page, totalPages }, totalCount);
     }
 
-    // ✅ 수락/거절
+    // 수락/거절
     async decideApplication(helpId, requesterId, body) {
         // 1) 입력 검증
         const applicationId = parseInt(body?.applicationId);
