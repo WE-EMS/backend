@@ -20,6 +20,7 @@ import { injectUser } from "./auth/auth.middleware.js";
 // 라우트 연결
 import { usersRoutes } from "./users/users.route.js";
 import { helpsRoutes } from "./helps/helps.route.js";
+import { reviewsRoutes } from "./reviews/reviews.route.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -102,6 +103,7 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/helps", helpsRoutes);
+app.use("/api/reviews", reviewsRoutes);
 
 // 기존 카카오 로그인 라우트 (호환성을 위해 유지)
 app.get("/oauth2/login/kakao", (req, res) => {
