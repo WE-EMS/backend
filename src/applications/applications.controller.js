@@ -164,6 +164,14 @@ export class ApplicationsController {
      *         required: true
      *         schema: { type: integer }
      *         description: 지원자 목록을 조회할 돌봄요청 ID
+     *       - in: query
+     *         name: page
+     *         schema: { type: integer, minimum: 1, default: 1 }
+     *         description: 페이지 번호(기본 1)
+     *       - in: query
+     *         name: size
+     *         schema: { type: integer, minimum: 1, maximum: 50, default: 10 }
+     *         description: 페이지 크기(기본 10, 최대 50)
      *     responses:
      *       200:
      *         description: 조회 성공
@@ -265,8 +273,11 @@ export class ApplicationsController {
 
             const { helpId } = req.params;
             const requesterId = req.user.id;
+            const page = Math.max(parseInt(req.query.page) || 1, 1);
+            const size = Math.min(Math.max(parseInt(req.query.size) || 10, 1), 50);
 
-            const data = await applicationsService.getApplyList(helpId, requesterId);
+            const data = await applicationsService.getApplyList(helpId, requesterId, { page, size });
+
 
             return res.status(200).json({
                 resultType: "SUCCESS",

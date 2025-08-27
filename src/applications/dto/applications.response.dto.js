@@ -25,7 +25,7 @@ export class ApplicationResponseDto {
 
 // 지원자 목록용 DTO들
 export class ApplyListResponseDto {
-    constructor(help, applications, reviewStatsByUser) {
+    constructor(help, applications, reviewStatsByUser, pagination = null, totalCount = null) {
         this.help = {
             id: help.id,
             helpType: help.helpType,
@@ -34,7 +34,8 @@ export class ApplyListResponseDto {
             statusText: this._helpStatusText(help.status),
         };
 
-        this.totalApplicants = applications.length;
+        // 전체 지원자 수 (페이지네이션 적용 전 총합)
+        this.totalApplicants = Number.isInteger(totalCount) ? totalCount : applications.length;
         this.applicants = applications.map((a) => {
             const stats = reviewStatsByUser[a.userId] || {
                 reviewCount: 0,
@@ -42,6 +43,13 @@ export class ApplyListResponseDto {
             };
             return new ApplicantListItemDto(a, stats);
         });
+        // 페이지네이션
+        if (pagination) {
+            this.pagination = {
+                page: pagination.page,
+                totalPages: pagination.totalPages
+            };
+        }
     }
 
     _helpTypeText(type) {
