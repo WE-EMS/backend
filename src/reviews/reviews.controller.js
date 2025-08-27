@@ -1,6 +1,6 @@
 import { reviewService } from './reviews.service.js';
 import { CreateHelpReviewDto, CreateAssignmentReviewDto } from './dto/reviews.request.dto.js';
-import { ReviewResponseDto } from './dto/reviews.response.dto.js';
+import { ReviewResponseDto, ReviewWritableDto, ReviewWrittenItemDto, ReviewReceivedItemDto } from './dto/reviews.response.dto.js';
 
 export const reviewController = {
     async createForHelp(req, res) {
@@ -382,6 +382,143 @@ export const reviewController = {
             return res.status(e.status || 500).json({
                 resultType: 'FAIL',
                 error: { errorCode: e.code || 'FETCH_ERROR', reason: e.message, data: null },
+                data: null,
+            });
+        }
+    },
+    /**
+     * @swagger
+     * /api/reviews/me:
+     *   get:
+     *     tags: [Reviews]
+     *     summary: 내 리뷰 작성 가능 목록
+     *     description: 내가 요청자/참여자였던 도움들 중, 아직 내가 리뷰를 작성하지 않은 건(리뷰 가능 기간 3일 내)에 대해 반환
+     *     security: [ { bearerAuth: [] } ]
+     *     parameters:
+     *       - in: query
+     *         name: page
+     *         schema: { type: integer, default: 1 }
+     *       - in: query
+     *         name: size
+     *         schema: { type: integer, default: 10 }
+     *     responses:
+     *       200:
+     *         description: 성공
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 resultType: { type: string, example: SUCCESS }
+     *                 error: { nullable: true, example: null }
+     *                 data:
+     *                   type: object
+     *                   properties:
+     *                     page: { type: integer, example: 1 }
+     *                     totalPage: { type: integer, example: 5 }
+     *                     items:
+     *                       type: array
+     *                       items:
+     *                         type: object
+     *                         properties:
+     *                           helpId: { type: integer, example: 17 }
+     *                           assignmentId: { type: integer, nullable: true, example: 42 }
+     *                           helpType: { type: integer, example: 1 }
+     *                           serviceDate: { type: string, format: date, example: "2025-08-20T00:00:00.000Z" }
+     *                           participantNickname: { type: string, example: "수림" }
+     *                           myRole: { type: string, example: "요청자" }
+     */
+    async getMyReviewables(req, res) {
+        try {
+            const userId = req.user.id;
+            const page = Math.max(1, Number(req.query.page ?? 1));
+            const size = Math.max(1, Math.min(100, Number(req.query.size ?? 10)));
+            const { items, page: p, totalPage } = await reviewService.getMyReviewables(userId, { page, size });
+            return res.status(200).json({
+                resultType: 'SUCCESS',
+                error: null,
+                data: { page: p, totalPage, items: items.map(x => new ReviewWritableDto(x)) }
+            });
+        } catch (e) {
+            return res.status(e.status || 400).json({
+                resultType: 'FAIL',
+                error: { errorCode: e.code || 'BAD_REQUEST', reason: e.message, data: null },
+                data: null,
+            });
+        }
+    },
+
+    /**
+     * @swagger
+     * /api/reviews/me/written:
+     *   get:
+     *     tags: [Reviews]
+     *     summary: 내가 쓴 리뷰 목록
+     *     security: [ { bearerAuth: [] } ]
+     *     parameters:
+     *       - in: query
+     *         name: page
+     *         schema: { type: integer, default: 1 }
+     *       - in: query
+     *         name: size
+     *         schema: { type: integer, default: 10 }
+     *     responses:
+     *       200:
+     *         description: 성공
+     */
+    async getMyWritten(req, res) {
+        try {
+            const userId = req.user.id;
+            const page = Math.max(1, Number(req.query.page ?? 1));
+            const size = Math.max(1, Math.min(100, Number(req.query.size ?? 10)));
+            const { items, page: p, totalPage } = await reviewService.getMyWritten(userId, { page, size });
+            return res.status(200).json({
+                resultType: 'SUCCESS',
+                error: null,
+                data: { page: p, totalPage, items: items.map(x => new ReviewWrittenItemDto(x)) }
+            });
+        } catch (e) {
+            return res.status(e.status || 400).json({
+                resultType: 'FAIL',
+                error: { errorCode: e.code || 'BAD_REQUEST', reason: e.message, data: null },
+                data: null,
+            });
+        }
+    },
+
+    /**
+     * @swagger
+     * /api/reviews/me/received:
+     *   get:
+     *     tags: [Reviews]
+     *     summary: 내가 받은 리뷰 목록
+     *     security: [ { bearerAuth: [] } ]
+     *     parameters:
+     *       - in: query
+     *         name: page
+     *         schema: { type: integer, default: 1 }
+     *       - in: query
+     *         name: size
+     *         schema: { type: integer, default: 10 }
+     *     responses:
+     *       200:
+     *         description: 성공
+     */
+    async getMyReceived(req, res) {
+        try {
+            const userId = req.user.id;
+            const page = Math.max(1, Number(req.query.page ?? 1));
+            const size = Math.max(1, Math.min(100, Number(req.query.size ?? 10)));
+            const { items, page: p, totalPage } = await reviewService.getMyReceived(userId, { page, size });
+            return res.status(200).json({
+                resultType: 'SUCCESS',
+                error: null,
+                data: { page: p, totalPage, items: items.map(x => new ReviewReceivedItemDto(x)) }
+            });
+        } catch (e) {
+            return res.status(e.status || 400).json({
+                resultType: 'FAIL',
+                error: { errorCode: e.code || 'BAD_REQUEST', reason: e.message, data: null },
                 data: null,
             });
         }

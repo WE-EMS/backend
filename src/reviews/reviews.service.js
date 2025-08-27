@@ -1,7 +1,7 @@
 import { reviewRepository } from './reviews.repository.js';
 
 const REVIEW_WINDOW_DAYS = 3;
-const FINISHED_STATUS = 2; // 완료=2
+const FINISHED_STATUS = 2;
 
 class ReviewService {
     async createForHelp({ reviewerId, helpId, rating, content }) {
@@ -89,6 +89,88 @@ class ReviewService {
         const helpIds = overdueHelps.map(h => h.id);
         const affectedCount = await reviewRepository.bulkUpdateHelpsStatus(helpIds, FINISHED_STATUS);
         return { affectedCount };
+    }
+
+    async getMyReviewables(userId, { page = 1, size = 10 } = {}) {
+        if (!userId) this._throw(401, 'UNAUTHORIZED', '로그인이 필요합니다.');
+
+        const candidates = await reviewRepository.findReviewableCandidatesByUser(userId);
+
+        const now = new Date();
+        const filtered = candidates
+            // 내가 아직 리뷰를 안 쓴 건만
+            .filter(h => (h.reviews?.length ?? 0) === 0)
+            // 리뷰 가능 기간(종료~3일 내)인 건만
+            .filter(h => {
+                const endAt = this._composeEndAt(h.serviceDate, h.endTime);
+                const windowEnd = new Date(endAt.getTime() + REVIEW_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+                return now >= endAt && now <= windowEnd;
+            })
+            // 응답 DTO용 데이터 구성
+            .map(h => {
+                const isRequester = h.requesterId === userId;
+                const helper = h.assignment?.helper;
+                const requester = h.requester;
+                const participantNickname = isRequester ? (helper?.nickname ?? null) : requester?.nickname;
+                return {
+                    helpId: h.id,
+                    assignmentId: h.assignment?.id ?? null, // 요청자이면 존재, 참여자이면 null일 수 있음
+                    helpType: h.helpType,
+                    serviceDate: h.serviceDate,
+                    participantNickname,
+                    counterRole: isRequester ? '참여자' : '요청자',
+                };
+            });
+        const total = filtered.length;
+        const totalPage = Math.max(1, Math.ceil(total / size));
+        const start = (page - 1) * size;
+        const items = filtered.slice(start, start + size);
+        return { items, page, totalPage };
+    }
+
+    async getMyWritten(userId, { page = 1, size = 10 } = {}) {
+        if (!userId) this._throw(401, 'UNAUTHORIZED', '로그인이 필요합니다.');
+        const total = await reviewRepository.countWrittenByUser(userId);
+        const totalPage = Math.max(1, Math.ceil(total / size));
+        const skip = (page - 1) * size;
+        const rows = await reviewRepository.findWrittenByUser(userId, { skip, take: size });
+        const items = rows.map(r => {
+            const help = r.helpRequest;
+            const helperId = r.HelpAssignment?.helperId ?? null;
+            const isReviewerRequester = help.requesterId === r.reviewerId;
+            const counterRole = isReviewerRequester ? '참여자' : '요청자';
+            return {
+                counterNickname: r.reviewee.nickname,
+                counterRole,
+                helpType: help.helpType,
+                rating: r.rating,
+                createdAt: r.createdAt,
+                content: r.content ?? null,
+            };
+        });
+        return { items, page, totalPage };
+    }
+
+    async getMyReceived(userId, { page = 1, size = 10 } = {}) {
+        if (!userId) this._throw(401, 'UNAUTHORIZED', '로그인이 필요합니다.');
+        const total = await reviewRepository.countReceivedByUser(userId);
+        const totalPage = Math.max(1, Math.ceil(total / size));
+        const skip = (page - 1) * size;
+        const rows = await reviewRepository.findReceivedByUser(userId, { skip, take: size });
+        const items = rows.map(r => {
+            const help = r.helpRequest;
+            const isReviewerRequester = help.requesterId === r.reviewerId;
+            const counterRole = isReviewerRequester ? '요청자' : '참여자'; // 내가 받은 입장에서 상대의 역할
+            return {
+                counterNickname: r.reviewer.nickname,
+                counterRole,
+                helpType: help.helpType,
+                rating: r.rating,
+                createdAt: r.createdAt,
+                content: r.content ?? null,
+            };
+        });
+        return { items, page, totalPage };
     }
 
     // helpers
