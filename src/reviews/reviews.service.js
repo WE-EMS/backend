@@ -125,7 +125,10 @@ class ReviewService {
         const totalPage = Math.max(1, Math.ceil(total / size));
         const start = (page - 1) * size;
         const items = filtered.slice(start, start + size);
-        return { items, page, totalPage };
+        return {
+            items,
+            pagination: { page, totalPages: totalPage }
+        };
     }
 
     async getMyWritten(userId, { page = 1, size = 10 } = {}) {
@@ -148,7 +151,10 @@ class ReviewService {
                 content: r.content ?? null,
             };
         });
-        return { items, page, totalPage };
+        return {
+            items,
+            pagination: { page, totalPages: totalPage }
+        };
     }
 
     async getMyReceived(userId, { page = 1, size = 10 } = {}) {
@@ -170,7 +176,10 @@ class ReviewService {
                 content: r.content ?? null,
             };
         });
-        return { items, page, totalPage };
+        return {
+            items,
+            pagination: { page, totalPages: totalPage }
+        };
     }
 
     // helpers

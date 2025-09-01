@@ -294,8 +294,10 @@ export class ApplicationsService {
 
             return {
                 applications: formattedApplications,
-                page,
-                totalPages,
+                pagenation: {
+                    page,
+                    totalPages,
+                }
             };
         } catch (e) {
             console.error("Get my applications error:", e);
