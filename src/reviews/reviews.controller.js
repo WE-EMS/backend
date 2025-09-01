@@ -150,12 +150,12 @@ export const reviewController = {
             const data = await reviewService.createForHelp({
                 reviewerId, helpId: dto.helpId, rating: dto.rating, content: dto.content,
             });
-            return res.status(201).json({ resultType: 'SUCCESS', error: null, data: new ReviewResponseDto(data) });
+            return res.status(201).json({ resultType: 'SUCCESS', error: null, success: new ReviewResponseDto(data) });
         } catch (e) {
             return res.status(e.status || 400).json({
                 resultType: 'FAIL',
                 error: { errorCode: e.code || 'BAD_REQUEST', reason: e.message, data: null },
-                data: null,
+                success: null,
             });
         }
     },
@@ -354,12 +354,12 @@ export const reviewController = {
             const data = await reviewService.createForAssignment({
                 reviewerId, assignmentId: dto.assignmentId, rating: dto.rating, content: dto.content,
             });
-            return res.status(201).json({ resultType: 'SUCCESS', error: null, data: new ReviewResponseDto(data) });
+            return res.status(201).json({ resultType: 'SUCCESS', error: null, success: new ReviewResponseDto(data) });
         } catch (e) {
             return res.status(e.status || 400).json({
                 resultType: 'FAIL',
                 error: { errorCode: e.code || 'BAD_REQUEST', reason: e.message, data: null },
-                data: null,
+                success: null,
             });
         }
     },
@@ -377,78 +377,110 @@ export const reviewController = {
          */
         try {
             const { affectedCount } = await reviewService.autoCompleteHelps();
-            return res.status(200).json({ resultType: 'SUCCESS', error: null, data: { affectedCount } });
+            return res.status(200).json({ resultType: 'SUCCESS', error: null, success: { affectedCount } });
         } catch (e) {
             return res.status(e.status || 500).json({
                 resultType: 'FAIL',
                 error: { errorCode: e.code || 'FETCH_ERROR', reason: e.message, data: null },
-                data: null,
+                success: null,
             });
         }
     },
+
     /**
      * @swagger
      * /api/reviews/me:
      *   get:
      *     tags: [Reviews]
      *     summary: 내 리뷰 작성 가능 목록
-     *     description: 내가 요청자/참여자였던 도움들 중, 아직 내가 리뷰를 작성하지 않은 건(리뷰 가능 기간 3일 내)에 대해 반환
-     *     security: [ { bearerAuth: [] } ]
+     *     description: 내가 요청자/참여자였던 도움들 중, 아직 내가 리뷰를 작성하지 않은 건(리뷰 가능 기간 3일 내)만 반환
+     *     security:
+     *       - bearerAuth: []
      *     parameters:
      *       - in: query
      *         name: page
-     *         schema: { type: integer, default: 1 }
+     *         schema: { type: integer, minimum: 1, default: 1 }
+     *         description: 페이지 번호
      *       - in: query
      *         name: size
-     *         schema: { type: integer, default: 10 }
+     *         schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+     *         description: 페이지 크기
      *     responses:
      *       200:
      *         description: 성공
      *         content:
      *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 resultType: { type: string, example: SUCCESS }
-     *                 error: { nullable: true, example: null }
-     *                 data:
-     *                   type: object
-     *                   properties:
-     *                     page: { type: integer, example: 1 }
-     *                     totalPage: { type: integer, example: 5 }
+     *             examples:
+     *               empty:
+     *                 summary: 작성 가능 항목이 없는 경우
+     *                 value:
+     *                   resultType: SUCCESS
+     *                   error: null
+     *                   success:
+     *                     items: []
+     *                     pagination:
+     *                       page: 1
+     *                       totalPages: 1
+     *               withItems:
+     *                 summary: 작성 가능 항목이 있는 경우
+     *                 value:
+     *                   resultType: SUCCESS
+     *                   error: null
+     *                   success:
      *                     items:
-     *                       type: array
-     *                       items:
-     *                         type: object
-     *                         properties:
-     *                           helpId: { type: integer, example: 17 }
-     *                           assignmentId: { type: integer, nullable: true, example: 42 }
-     *                           helpType: { type: integer, example: 1 }
-     *                           serviceDate: { type: string, format: date, example: "2025-08-20T00:00:00.000Z" }
-     *                           participantNickname: { type: string, example: "수림" }
-     *                           myRole: { type: string, example: "요청자" }
+     *                       - helpId: 19
+     *                         assignmentId: null
+     *                         helpType: 2
+     *                         serviceDate: "2025-08-27T00:00:00.000Z"
+     *                         participantNickname: null
+     *                         counterRole: "참여자"
+     *                       - helpId: 20
+     *                         assignmentId: 7
+     *                         helpType: 2
+     *                         serviceDate: "2025-08-27T00:00:00.000Z"
+     *                         participantNickname: "염둘"
+     *                         counterRole: "참여자"
+     *                       - helpId: 21
+     *                         assignmentId: 6
+     *                         helpType: 2
+     *                         serviceDate: "2025-08-27T00:00:00.000Z"
+     *                         participantNickname: "염둘"
+     *                         counterRole: "참여자"
+     *                       - helpId: 22
+     *                         assignmentId: 8
+     *                         helpType: 2
+     *                         serviceDate: "2025-08-27T00:00:00.000Z"
+     *                         participantNickname: "염둘"
+     *                         counterRole: "요청자"
+     *                     pagination:
+     *                       page: 1
+     *                       totalPages: 1
      */
     async getMyReviewables(req, res) {
         try {
             const userId = req.user.id;
             const page = Math.max(1, Number(req.query.page ?? 1));
             const size = Math.max(1, Math.min(100, Number(req.query.size ?? 10)));
-            const { items, page: p, totalPage } = await reviewService.getMyReviewables(userId, { page, size });
+            const { items, pagination } = await reviewService.getMyReviewables(userId, { page, size });
             return res.status(200).json({
                 resultType: 'SUCCESS',
                 error: null,
-                data: { page: p, totalPage, items: items.map(x => new ReviewWritableDto(x)) }
+                success: {
+                    items: items.map(x => new ReviewWritableDto(x)),
+                    pagination
+                }
             });
         } catch (e) {
             return res.status(e.status || 400).json({
                 resultType: 'FAIL',
                 error: { errorCode: e.code || 'BAD_REQUEST', reason: e.message, data: null },
-                data: null,
+                success: null,
             });
         }
     },
 
-    /**
+    async getMyWritten(req, res) {
+        /**
      * @swagger
      * /api/reviews/me/written:
      *   get:
@@ -465,28 +497,53 @@ export const reviewController = {
      *     responses:
      *       200:
      *         description: 성공
+     *         content:
+     *           application/json:
+     *             example:
+     *               resultType: SUCCESS
+     *               error: null
+     *               success:
+     *                 items:
+     *                   - counterNickname: "김엄마"
+     *                     counterRole: "참여자"
+     *                     helpType: 1
+     *                     rating: 5
+     *                     createdAt: "2025-08-28T10:30:00.000Z"
+     *                     content: "정말 감사했어요!"
+     *                   - counterNickname: "이아빠"
+     *                     counterRole: "요청자"
+     *                     helpType: 2
+     *                     rating: 4
+     *                     createdAt: "2025-08-29T14:20:00.000Z"
+     *                     content: "좋았습니다."
+     *                 pagination:
+     *                   page: 1
+     *                   totalPages: 1
      */
-    async getMyWritten(req, res) {
         try {
             const userId = req.user.id;
             const page = Math.max(1, Number(req.query.page ?? 1));
             const size = Math.max(1, Math.min(100, Number(req.query.size ?? 10)));
-            const { items, page: p, totalPage } = await reviewService.getMyWritten(userId, { page, size });
+            const { items, pagination } = await reviewService.getMyWritten(userId, { page, size });
             return res.status(200).json({
                 resultType: 'SUCCESS',
                 error: null,
-                data: { page: p, totalPage, items: items.map(x => new ReviewWrittenItemDto(x)) }
+                success: {
+                    items: items.map(x => new ReviewWritableDto(x)),
+                    pagination
+                }
             });
         } catch (e) {
             return res.status(e.status || 400).json({
                 resultType: 'FAIL',
                 error: { errorCode: e.code || 'BAD_REQUEST', reason: e.message, data: null },
-                data: null,
+                success: null,
             });
         }
     },
 
-    /**
+    async getMyReceived(req, res) {
+        /**
      * @swagger
      * /api/reviews/me/received:
      *   get:
@@ -503,23 +560,47 @@ export const reviewController = {
      *     responses:
      *       200:
      *         description: 성공
+     *         content:
+     *           application/json:
+     *             example:
+     *               resultType: SUCCESS
+     *               error: null
+     *               success:
+     *                 items:
+     *                   - counterNickname: "수림"
+     *                     counterRole: "요청자"
+     *                     helpType: 1
+     *                     rating: 5
+     *                     createdAt: "2025-08-28T12:00:00.000Z"
+     *                     content: "매우 만족합니다!"
+     *                   - counterNickname: "박선생"
+     *                     counterRole: "참여자"
+     *                     helpType: 3
+     *                     rating: 3
+     *                     createdAt: "2025-08-29T09:15:00.000Z"
+     *                     content: "시간 약속이 아쉬웠어요."
+     *                 pagination:
+     *                   page: 1
+     *                   totalPages: 1
      */
-    async getMyReceived(req, res) {
         try {
             const userId = req.user.id;
             const page = Math.max(1, Number(req.query.page ?? 1));
             const size = Math.max(1, Math.min(100, Number(req.query.size ?? 10)));
-            const { items, page: p, totalPage } = await reviewService.getMyReceived(userId, { page, size });
+            const { items, pagination } = await reviewService.getMyReceived(userId, { page, size });
             return res.status(200).json({
                 resultType: 'SUCCESS',
                 error: null,
-                data: { page: p, totalPage, items: items.map(x => new ReviewReceivedItemDto(x)) }
+                success: {
+                    items: items.map(x => new ReviewWritableDto(x)),
+                    pagination
+                }
             });
         } catch (e) {
             return res.status(e.status || 400).json({
                 resultType: 'FAIL',
                 error: { errorCode: e.code || 'BAD_REQUEST', reason: e.message, data: null },
-                data: null,
+                success: null,
             });
         }
     },
