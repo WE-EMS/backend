@@ -472,6 +472,31 @@ import { AuthResponseDto } from "./dto/auth.response.dto.js";
  *                   example: null
  */
 
+// 로컬 개발용
+const cookieOptsDev = {
+    httpOnly: true,
+    secure: false,    // http
+    sameSite: 'Lax',  // 같은 PC 포트 간 요청만
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
+// 배포용
+const cookieOptsProd = {
+    httpOnly: true,
+    secure: true,          // HTTPS 필수
+    sameSite: 'None',      // 크로스사이트 허용
+    domain: '.jogakdolbom.site', // API 서버 도메인
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60 * 1000
+};
+
+// NODE_ENV 기준 분기
+const getCookieOpts = () => {
+    const isProd = (process.env.NODE_ENV || '').startsWith('production');
+    return isProd ? cookieOptsProd : cookieOptsDev;
+};
+
 // 프론트엔드에서 OAuth 콜백을 받도록 수정된 콜백 URI
 const getRedirectUri = (req) => {
     const { NODE_ENV, KAKAO_REDIRECT_URI_PROD, KAKAO_REDIRECT_URI_DEV } = process.env;
@@ -540,10 +565,11 @@ class AuthController {
                 _json: userData
             };
 
-            // 3) 우리 서비스 JWT 발급 및 사용자 정보 가져오기
+            // 3) 서비스 JWT 발급 및 사용자 정보 가져오기
             const { tokens, user } = await authService.handleKakaoLogin(profile);
 
-            // 4) JSON 응답으로 토큰 정보만 간단히 반환
+            // 4) 토큰을 HTTP-only 쿠키에 저장
+            res.cookie("accessToken", tokens.accessToken, getCookieOpts());
             res.success({
                 message: "로그인이 완료되었습니다.",
                 accessToken: tokens.accessToken,
@@ -562,10 +588,10 @@ class AuthController {
 
     // 로그아웃
     logout = (req, res) => {
-        res.success({
-            message: "로그아웃이 완료되었습니다. 클라이언트에서 토큰을 제거해주세요.",
-            action: "REMOVE_TOKEN"
-        });
+        const clearOpts = { ...getCookieOpts() };
+        delete clearOpts.maxAge;
+        res.clearCookie("accessToken", clearOpts);
+        res.success({ message: "로그아웃이 완료되었습니다.", action: "REMOVE_TOKEN" });
     };
 
     // 현재 사용자 정보 조회 (인증 상태 확인 + 사용자 정보)
@@ -591,8 +617,8 @@ class AuthController {
                     statusCode: 401
                 });
             }
-
             const tokens = authService.generateTokens(req.user);
+            res.cookie("accessToken", tokens.accessToken, getCookieOpts());
             res.success({
                 message: "토큰이 갱신되었습니다.",
                 accessToken: tokens.accessToken,
