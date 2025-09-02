@@ -849,7 +849,7 @@ export class HelpsController {
  *                       type: object
  *                       properties:
  *                         page: { type: integer, example: 2 }
- *                         totalPage: { type: integer, example: 2 }
+ *                         totalPages: { type: integer, example: 2 }
  *       500:
  *         description: 서버 내부 오류
  *         content:

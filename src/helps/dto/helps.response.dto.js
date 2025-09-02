@@ -116,7 +116,7 @@ export class HelpRequestListResponseDto {
         this.requests = requests.map(request => new HelpRequestListItemDto(request));
         this.pagination = {
             page: page,
-            totalPage: totalPage
+            totalPages: totalPage
         };
     }
 }
@@ -186,7 +186,7 @@ export class MyHelpRequestListResponseDto {
         this.requests = requests.map(request => new MyHelpRequestListItemDto(request));
         this.pagination = {
             page: page,
-            totalPage: totalPage
+            totalPages: totalPage
         };
     }
 }
@@ -231,7 +231,7 @@ export class MyCompleteHelpsResponseDto {
         this.requests = helps.map(help => new MyCompleteHelpItemDto(help));
         this.pagination = {
             page: page,
-            totalPage: totalPage
+            totalPages: totalPage
         };
     }
 }
