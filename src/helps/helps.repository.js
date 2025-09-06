@@ -196,14 +196,16 @@ export class HelpsRepository {
             prisma.helpRequest.count({
                 where: {
                     requesterId: userId,
-                    status: 2 // 완료
+                    // 완료(2) + 모집종료(4) 포함
+                    status: { in: [2, 4] }
                 }
             }),
             prisma.helpAssignment.count({
                 where: {
                     helperId: userId,
                     helpRequest: {
-                        status: 2 // 완료
+                        // 완료(2) + 모집종료(4) 포함
+                        status: { in: [2, 4] }
                     }
                 }
             })
@@ -213,11 +215,12 @@ export class HelpsRepository {
 
         // 두 개의 쿼리를 Union으로 합치기
         const [requestedHelps, participatedHelps] = await Promise.all([
-            // 내가 요청한 완료된 돌봄
+            // 내가 요청한 완료/모집종료 돌봄
             prisma.helpRequest.findMany({
                 where: {
                     requesterId: userId,
-                    status: 2 // 완료
+                    // 완료(2) + 모집종료(4) 포함
+                    status: { in: [2, 4] }
                 },
                 select: {
                     id: true,
@@ -225,16 +228,18 @@ export class HelpsRepository {
                     serviceDate: true,
                     startTime: true,
                     endTime: true,
+                    status: true,
                     createdAt: true,
                     updatedAt: true
                 }
             }),
-            // 내가 참여한 완료된 돌봄 (HelpAssignment를 통해)
+            // 내가 참여한 완료/모집종료 돌봄 (HelpAssignment를 통해)
             prisma.helpAssignment.findMany({
                 where: {
                     helperId: userId,
                     helpRequest: {
-                        status: 2 // 완료
+                        // 완료(2) + 모집종료(4) 포함
+                        status: { in: [2, 4] }
                     }
                 },
                 include: {
@@ -245,6 +250,7 @@ export class HelpsRepository {
                             serviceDate: true,
                             startTime: true,
                             endTime: true,
+                            status: true,
                             createdAt: true,
                             updatedAt: true
                         }
@@ -269,6 +275,17 @@ export class HelpsRepository {
         const items = allHelps.slice(skip, skip + take);
 
         return { items, total };
+    }
+
+    // 매칭 안된 글 && 날짜 지난 글을 모집종료(4)로 일괄 갱신
+    async closeExpiredHelps(cutoffUtcDate) {
+        return await prisma.helpRequest.updateMany({
+            where: {
+                status: 0,                         // 아직 요청 상태
+                serviceDate: { lt: cutoffUtcDate } // 오늘 이전 날짜
+            },
+            data: { status: 4, updatedAt: new Date() }
+        });
     }
 }
 

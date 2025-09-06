@@ -243,7 +243,7 @@ export class HelpsService {
         }
     }
 
-    // 내가 요청/참여한 완료된 돌봄 목록 조회
+    // 내가 요청/참여한 완료/모집종료된 돌봄 목록 조회
     async getMyCompleteHelps({ userId, page = 1, size = 10 }) {
         const skip = (page - 1) * size;
         const take = size;

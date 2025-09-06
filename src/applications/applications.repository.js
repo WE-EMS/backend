@@ -8,6 +8,9 @@ export class ApplicationsRepository {
                 id: true,
                 requesterId: true,
                 status: true,
+                serviceDate: true,
+                startTime: true,
+                endTime: true,
             },
         });
     }

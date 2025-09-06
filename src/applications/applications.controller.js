@@ -41,6 +41,21 @@ export class ApplicationsController {
  *                   type: object
  *                   properties:
  *                     message: { type: string, example: "돌봄 참여가 정상적으로 신청되었습니다." }
+ *       400:
+ *         description: 모집 종료
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultType: { type: string, example: FAIL }
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     errorCode: { type: string, example: CLOSED }
+ *                     reason: { type: string, example: "모집이 종료된 글입니다." }
+ *                     data: { type: object, nullable: true, example: null }
+ *                 success: { type: object, nullable: true, example: null }
  *       401:
  *         description: 인증 필요
  *         content:
