@@ -42,7 +42,7 @@ model HelpRequest {
     requestLocation String? // 상세주소
     requestDetail   String? // 상세내용
     requestNote     String? // 참고사항
-    status          Int      @default(0) // 0: 요청, 1: 배정, 2: 완료, 3: 취소
+    status          Int      @default(0) // 0: 요청, 1: 배정, 2: 완료, 3: 취소, 4: 모집종료
     imageUrl        String?
     imageKey        String?
     rewardTokens    Int      @default(0)

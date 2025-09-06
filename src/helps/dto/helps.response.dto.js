@@ -28,6 +28,7 @@ export class HelpRequestResponseDto {
                 : 0;
             this.requester = {
                 id: helpRequest.requester.id,
+                region: helpRequest.requester.region,
                 nickname: helpRequest.requester.nickname,
                 imageUrl: helpRequest.requester.imageUrl || helpRequest.requester.kakaoProfileImageUrl,
                 avgRating,
@@ -51,7 +52,8 @@ export class HelpRequestResponseDto {
             0: '요청',
             1: '배정',
             2: '완료',
-            3: '취소'
+            3: '취소',
+            4: '모집종료'
         };
         return statuses[status] || '알 수 없음';
     }
@@ -62,6 +64,7 @@ export class HelpRequestListItemDto {
     constructor(helpRequest) {
         this.id = helpRequest.id;
         this.helpType = helpRequest.helpType;
+        this.helpStuats = helpRequest.status;
         this.helpTypeText = this._getHelpTypeText(helpRequest.helpType);
         this.serviceDate = helpRequest.serviceDate;
         this.startTime = helpRequest.startTime;
@@ -196,6 +199,7 @@ export class MyCompleteHelpItemDto {
     constructor(helpData) {
         this.id = helpData.id;
         this.roleType = helpData.roleType; // "요청" 또는 "참여"
+        this.helpStatus = helpData.status; // 2(돌봄완료) 또는 4(모집종료)
         this.helpType = helpData.helpType;
         this.helpTypeText = this._getHelpTypeText(helpData.helpType);
         this.serviceDate = helpData.serviceDate;
