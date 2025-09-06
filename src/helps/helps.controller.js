@@ -261,6 +261,8 @@ export class HelpsController {
     *                       properties:
     *                         id:
     *                           type: integer
+    *                         region:
+    *                           type: string
     *                         nickname:
     *                           type: string
     *                         imageUrl:
@@ -792,7 +794,7 @@ export class HelpsController {
  *         schema:
  *           type: integer
  *           enum: [0, 1, 2]
- *         description: "매칭 상태 (0: 요청, 1: 배정, 2: 완료)"
+ *         description: "매칭 상태 (0: 요청, 1: 배정, 2: 완료, 4: 모집종료)"
  *       - in: query
  *         name: helpTypes
  *         schema:
@@ -828,6 +830,7 @@ export class HelpsController {
  *                         properties:
  *                           id: { type: integer, example: 2 }
  *                           helpType: { type: integer, example: 3 }
+ *                           helpStatus: { type: integer, example: 0}
  *                           helpTypeText: { type: string, example: "동행 돌봄" }
  *                           serviceDate: { type: string, format: date-time, example: "2025-08-19T00:00:00.000Z" }
  *                           startTime: { type: string, format: date-time, example: "1970-01-01T00:30:00.000Z" }
@@ -1112,8 +1115,8 @@ export class HelpsController {
  * /api/helps/complete/me:
  *   get:
  *     tags: [Helps]
- *     summary: 내가 요청/참여한 완료된 돌봄 목록 조회
- *     description: "로그인한 사용자가 요청하거나 참여한 완료된 돌봄(status=2) 목록을 조회합니다."
+ *     summary: 내가 요청/참여한 돌봄완료/모집종료된 돌봄 목록 조회
+ *     description: "로그인한 사용자가 요청하거나 참여한 완료된 돌봄 혹은 모집 종료된(status=2, 4) 목록을 조회합니다."
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1159,6 +1162,9 @@ export class HelpsController {
  *                             type: string
  *                             enum: ["요청", "참여"]
  *                             example: "요청"
+ *                           helpStatus:
+ *                             type: integer
+ *                             example: 2
  *                           helpType:
  *                             type: integer
  *                             example: 1

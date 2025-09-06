@@ -32,6 +32,33 @@ export class ApplicationsService {
             };
         }
 
+        // 2-1) 시작시간 지난 글 지원 차단
+        const kstNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+        const kstToday = new Date(kstNow); kstToday.setHours(0, 0, 0, 0);
+
+        // serviceDate는 '날짜만' 저장된 DateTime, startTime은 '시간만'(1970-01-01 기준) 저장됨
+        // ① 과거 날짜면 무조건 막음
+        const serviceDateKst = new Date(new Date(help.serviceDate).toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+        serviceDateKst.setHours(0, 0, 0, 0);
+        if (serviceDateKst < kstToday) {
+            throw { errorCode: "CLOSED", reason: "모집이 종료된 글입니다.(과거 날짜)", statusCode: 400 };
+        }
+
+        // ② 오늘 글이면, startTime 지난 경우 막음
+        if (serviceDateKst.getTime() === kstToday.getTime()) {
+            const startTime = new Date(help.startTime); // 1970-01-01THH:mm:ssZ 형태
+            const startHour = startTime.getUTCHours();      // 시간만 추출
+            const startMin = startTime.getUTCMinutes();
+
+            // KST의 '오늘 날짜 + 시작 시간' 로컬 시각 생성
+            const startAtKst = new Date(kstToday);
+            startAtKst.setHours(startHour, startMin, 0, 0);
+
+            if (kstNow >= startAtKst) {
+                throw { errorCode: "CLOSED", reason: "모집이 종료된 글입니다.", statusCode: 400 };
+            }
+        }
+
         // 3) 본인 글 지원 방지
         if (help.requesterId === helperId) {
             throw {

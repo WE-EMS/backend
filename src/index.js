@@ -6,6 +6,7 @@ import multer from "multer";
 import { prisma } from "./db.config.js";
 import swaggerUiExpress from "swagger-ui-express";
 import { swaggerSpec } from "./swagger/swaggerSpec.js";
+import { scheduleCloseExpiredHelps } from "./jobs/close-expired-helps.job.js";
 
 // 이미지 업로드
 import { imageUploader } from "./middleware/image.uploader.js";
@@ -320,6 +321,9 @@ app.use((req, res) => {
         success: null,
     });
 });
+
+// 배치 스케줄러
+scheduleCloseExpiredHelps();
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
