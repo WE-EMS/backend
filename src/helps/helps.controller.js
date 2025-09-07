@@ -794,7 +794,7 @@ export class HelpsController {
  *         schema:
  *           type: integer
  *           enum: [0, 1, 2]
- *         description: "매칭 상태 (0: 요청, 1: 배정, 2: 완료, 4: 모집종료)"
+ *         description: "매칭 상태 (0: 요청, 1: 배정, 2: 완료)"
  *       - in: query
  *         name: helpTypes
  *         schema:
