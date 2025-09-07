@@ -298,15 +298,68 @@ export class HelpsRepository {
 
     // (B) 오늘 + 시작시간 경과 → 모집종료(4) 처리
     async closeExpiredByStartTimeToday({ todayStartUtc, tomorrowStartUtc, nowUtcTime }) {
-        return prisma.helpRequest.updateMany({
-            where: {
-                status: 0,
-                serviceDate: { gte: todayStartUtc, lt: tomorrowStartUtc }, // 오늘(KST)
-                startTime: { lte: nowUtcTime },                             // time-only(UTC) 비교
-            },
-            data: { status: 4, updatedAt: new Date() },
-        });
+        // KST 기준 현재 시:분을 추출해, 임계 UTC time-only(1970-01-01) 계산
+        const now = new Date(); // UTC
+        const kstHour = (now.getUTCHours() + 9) % 24;   // 현재 KST 시
+        const kstMin = now.getUTCMinutes();
+
+        // KST 00:00에 해당하는 UTC time-only = 1970-01-01T15:00:00Z
+        const KST_MID_UTC = new Date(Date.UTC(1970, 0, 1, 15, 0, 0, 0));
+        // (nowKst - 9h)을 time-only로 표현한 임계치
+        const thresholdUtc = new Date(Date.UTC(
+            1970, 0, 1,
+            nowUtcTime.getUTCHours(), nowUtcTime.getUTCMinutes(), nowUtcTime.getUTCSeconds()
+        ));
+
+        // 기본 where: 오늘(KST) + 아직 요청 상태
+        const base = {
+            status: 0,
+            serviceDate: { gte: todayStartUtc, lt: tomorrowStartUtc }
+        };
+
+        if (kstHour >= 9) {
+            // 구간 2개: [15:00, 24:00) ∪ [00:00, threshold]
+            return prisma.helpRequest.updateMany({
+                where: {
+                    ...base,
+                    OR: [
+                        { startTime: { gte: KST_MID_UTC } },
+                        { startTime: { lte: thresholdUtc } }
+                    ]
+                },
+                data: { status: 4, updatedAt: new Date() }
+            });
+        } else {
+            // 구간 1개: [15:00, threshold]
+            return prisma.helpRequest.updateMany({
+                where: {
+                    ...base,
+                    startTime: { gte: KST_MID_UTC, lte: thresholdUtc }
+                },
+                data: { status: 4, updatedAt: new Date() }
+            });
+        }
     }
+
+    /*    async debugCheckRow(helpId, { todayStartUtc, tomorrowStartUtc, nowUtcTime }) {
+            const row = await prisma.helpRequest.findUnique({
+                where: { id: helpId },
+                select: { id: true, status: true, serviceDate: true, startTime: true },
+            });
+    
+            const inToday =
+                row.serviceDate >= todayStartUtc && row.serviceDate < tomorrowStartUtc;
+            const started = row.startTime <= nowUtcTime;
+    
+            console.log("[debugCheckRow]", {
+                id: row.id,
+                status: row.status,
+                serviceDate: row.serviceDate.toISOString(),
+                startTime: row.startTime.toISOString(),
+                inToday, started,
+                willUpdate: row.status === 0 && inToday && started,
+            });
+        } */
 }
 
 export const helpsRepository = new HelpsRepository();
