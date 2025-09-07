@@ -287,6 +287,26 @@ export class HelpsRepository {
             data: { status: 4, updatedAt: new Date() }
         });
     }
+
+    // 과거 날짜 → 모집종료(4) 처리
+    async closeExpiredByPastDate(todayStartUtc) {
+        return prisma.helpRequest.updateMany({
+            where: { status: 0, serviceDate: { lt: todayStartUtc } },
+            data: { status: 4, updatedAt: new Date() },
+        });
+    }
+
+    // (B) 오늘 + 시작시간 경과 → 모집종료(4) 처리
+    async closeExpiredByStartTimeToday({ todayStartUtc, tomorrowStartUtc, nowUtcTime }) {
+        return prisma.helpRequest.updateMany({
+            where: {
+                status: 0,
+                serviceDate: { gte: todayStartUtc, lt: tomorrowStartUtc }, // 오늘(KST)
+                startTime: { lte: nowUtcTime },                             // time-only(UTC) 비교
+            },
+            data: { status: 4, updatedAt: new Date() },
+        });
+    }
 }
 
 export const helpsRepository = new HelpsRepository();
