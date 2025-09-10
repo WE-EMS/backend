@@ -73,7 +73,7 @@ export class ApplicantListItemDto {
         this.helper = {
             id: app.helper?.id ?? app.userId,
             nickname: app.helper?.nickname ?? "알수없음",
-            profileImageUrl:
+            imageUrl:
                 app.helper?.imageUrl || app.helper?.kakaoProfileImageUrl || null,
             reviewCount: stats.reviewCount ?? 0,
             ratingAvg: stats.ratingAvg ?? 0,
@@ -104,7 +104,7 @@ export class MyApplicationItemDto {
             requester: {
                 id: app.helpRequest.requester.id,
                 nickname: app.helpRequest.requester.nickname,
-                profileImageUrl:
+                imageUrl:
                     app.helpRequest.requester.imageUrl ||
                     app.helpRequest.requester.kakaoProfileImageUrl ||
                     null,

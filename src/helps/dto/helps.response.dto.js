@@ -148,7 +148,7 @@ export class MyHelpRequestListItemDto {
         if (helpRequest.applications && helpRequest.applications.length > 0) {
             this.applicants = helpRequest.applications.map(app => ({
                 helperId: app.userId,
-                helperImageUrl: app.helper.imageUrl || app.helper.kakaoProfileImageUrl
+                imageUrl: app.helper.imageUrl || app.helper.kakaoProfileImageUrl
             }));
         }
 

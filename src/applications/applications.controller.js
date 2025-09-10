@@ -232,7 +232,7 @@ export class ApplicationsController {
          *                         helper:
          *                           id: 3
          *                           nickname: "염둘"
-         *                           profileImageUrl: null
+         *                           imageUrl: null
          *                           reviewCount: 2
          *                           ratingAvg: 5
          *                     pagination:
@@ -605,7 +605,7 @@ export class ApplicationsController {
      *                       requester:
      *                         id: 5
      *                         nickname: "김엄마"
-     *                         profileImageUrl: "https://example.com/profile.jpg"
+     *                         imageUrl: "https://example.com/profile.jpg"
      *                         reviewCount: 12
      *                         ratingAvg: 4.8
      *                 pagination:

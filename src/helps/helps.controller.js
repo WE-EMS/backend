@@ -999,7 +999,7 @@ export class HelpsController {
  *                                 helperId:
  *                                   type: integer
  *                                   example: 5
- *                                 helperImageUrl:
+ *                                 imageUrl:
  *                                   type: string
  *                                   example: "https://example.com/helper1.jpg"
  *                           assignedHelper:
