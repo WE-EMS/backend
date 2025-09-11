@@ -24,6 +24,10 @@ export class ApplicationsRepository {
                 requesterId: true,
                 helpType: true,
                 status: true,
+                serviceDate: true,
+                startTime: true,
+                endTime: true,
+                addressText: true,
             },
         });
     }
@@ -213,6 +217,7 @@ export class ApplicationsRepository {
                         serviceDate: true,
                         startTime: true,
                         endTime: true,
+                        addressText: true,
                         requester: {
                             select: {
                                 id: true,

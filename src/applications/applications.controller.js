@@ -202,9 +202,13 @@ export class ApplicationsController {
          *                     help:
          *                       id: 6
          *                       helpType: 4
-         *                       helpTypeText: "기타"
+         *                       helpTypeText: "기타 돌봄"
          *                       status: 0
          *                       statusText: "요청"
+         *                       serviceDate: "2025-08-20T00:00:00.000Z"
+         *                       startTime: "1970-01-01T01:30:00.000Z"
+         *                       endTime: "1970-01-01T03:00:00.000Z"
+         *                       addressText: "서울시 동대문구 한교동"
          *                     totalApplicants: 0
          *                     applicants: []
          *                     pagination:
@@ -219,9 +223,13 @@ export class ApplicationsController {
          *                     help:
          *                       id: 16
          *                       helpType: 1
-         *                       helpTypeText: "등하원"
+         *                       helpTypeText: "등하원 돌봄"
          *                       status: 0
          *                       statusText: "요청"
+         *                       serviceDate: "2025-08-20T00:00:00.000Z"
+         *                       startTime: "1970-01-01T01:30:00.000Z"
+         *                       endTime: "1970-01-01T03:00:00.000Z"
+         *                       addressText: "서울시 동대문구 한교동"
          *                     totalApplicants: 1
          *                     applicants:
          *                       - applicationId: 1
@@ -598,10 +606,11 @@ export class ApplicationsController {
      *                     help:
      *                       id: 20
      *                       helpType: 1
-     *                       helpTypeText: "등하원"
+     *                       helpTypeText: "등하원 돌봄"
      *                       serviceDate: "2025-08-20T00:00:00.000Z"
      *                       startTime: "1970-01-01T01:30:00.000Z"
      *                       endTime: "1970-01-01T03:00:00.000Z"
+     *                       addressText: "서울시 동대문구 한교동"
      *                       requester:
      *                         id: 5
      *                         nickname: "김엄마"
