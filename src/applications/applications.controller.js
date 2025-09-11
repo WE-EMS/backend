@@ -202,9 +202,14 @@ export class ApplicationsController {
          *                     help:
          *                       id: 6
          *                       helpType: 4
-         *                       helpTypeText: "기타"
+         *                       helpTypeText: "기타 돌봄"
          *                       status: 0
          *                       statusText: "요청"
+         *                       serviceDate: "2025-08-20T00:00:00.000Z"
+         *                       startTime: "1970-01-01T01:30:00.000Z"
+         *                       endTime: "1970-01-01T03:00:00.000Z"
+         *                       addressText: "서울시 동대문구 한교동"
+         *                       rewardTokens: 9
          *                     totalApplicants: 0
          *                     applicants: []
          *                     pagination:
@@ -219,9 +224,14 @@ export class ApplicationsController {
          *                     help:
          *                       id: 16
          *                       helpType: 1
-         *                       helpTypeText: "등하원"
+         *                       helpTypeText: "등하원 돌봄"
          *                       status: 0
          *                       statusText: "요청"
+         *                       serviceDate: "2025-08-20T00:00:00.000Z"
+         *                       startTime: "1970-01-01T01:30:00.000Z"
+         *                       endTime: "1970-01-01T03:00:00.000Z"
+         *                       addressText: "서울시 동대문구 한교동"
+         *                       rewardTokens: 9
          *                     totalApplicants: 1
          *                     applicants:
          *                       - applicationId: 1
@@ -232,7 +242,7 @@ export class ApplicationsController {
          *                         helper:
          *                           id: 3
          *                           nickname: "염둘"
-         *                           profileImageUrl: null
+         *                           imageUrl: null
          *                           reviewCount: 2
          *                           ratingAvg: 5
          *                     pagination:
@@ -598,14 +608,16 @@ export class ApplicationsController {
      *                     help:
      *                       id: 20
      *                       helpType: 1
-     *                       helpTypeText: "등하원"
+     *                       helpTypeText: "등하원 돌봄"
      *                       serviceDate: "2025-08-20T00:00:00.000Z"
      *                       startTime: "1970-01-01T01:30:00.000Z"
      *                       endTime: "1970-01-01T03:00:00.000Z"
+     *                       addressText: "서울시 동대문구 한교동"
+     *                       rewardTokens: 9
      *                       requester:
      *                         id: 5
      *                         nickname: "김엄마"
-     *                         profileImageUrl: "https://example.com/profile.jpg"
+     *                         imageUrl: "https://example.com/profile.jpg"
      *                         reviewCount: 12
      *                         ratingAvg: 4.8
      *                 pagination:

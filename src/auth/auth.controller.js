@@ -475,8 +475,8 @@ import { AuthResponseDto } from "./dto/auth.response.dto.js";
 // 로컬 개발용
 const cookieOptsDev = {
     httpOnly: true,
-    secure: false,    // http
-    sameSite: 'Lax',  // 같은 PC 포트 간 요청만
+    secure: true,    // http
+    sameSite: 'None',  // 같은 PC 포트 간 요청만
     path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000,
 };

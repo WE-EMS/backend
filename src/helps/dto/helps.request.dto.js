@@ -48,11 +48,14 @@ export class CreateHelpRequestDto {
         if (!this.serviceDate) {
             errors.push('서비스 날짜를 선택해주세요.');
         } else {
-            const serviceDate = new Date(this.serviceDate);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            if (serviceDate < today) {
+            // KST 기준으로 비교 → utils/time.js에서 헬퍼 불러와 사용
+            // - toKstDateOnly: DB/입력 날짜를 KST 날짜 객체로 변환
+            // - getKstStartOfTodayUtc: 오늘 00:00(KST)의 UTC (여기선 단순히 KST '오늘 00:00'을 만들어 비교)
+            const kstNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+            kstNow.setHours(0, 0, 0, 0); // 오늘 KST 자정
+            const serviceDateKst = new Date(new Date(this.serviceDate).toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+            serviceDateKst.setHours(0, 0, 0, 0);
+            if (serviceDateKst < kstNow) {
                 errors.push('서비스 날짜는 오늘 또는 이후여야 합니다.');
             }
         }
