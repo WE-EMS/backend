@@ -28,6 +28,7 @@ export class ApplicationsRepository {
                 startTime: true,
                 endTime: true,
                 addressText: true,
+                rewardTokens: true,
             },
         });
     }
@@ -218,6 +219,7 @@ export class ApplicationsRepository {
                         startTime: true,
                         endTime: true,
                         addressText: true,
+                        rewardTokens: true,
                         requester: {
                             select: {
                                 id: true,

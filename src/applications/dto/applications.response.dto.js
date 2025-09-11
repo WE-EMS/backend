@@ -36,6 +36,7 @@ export class ApplyListResponseDto {
             startTime: help.startTime,
             endTime: help.endTime,
             addressText: help.addressText,
+            rewardTokens: help.rewardTokens,
         };
 
         // 전체 지원자 수 (페이지네이션 적용 전 총합)
@@ -106,6 +107,7 @@ export class MyApplicationItemDto {
             startTime: app.helpRequest.startTime,
             endTime: app.helpRequest.endTime,
             addressText: app.helpRequest.addressText,
+            rewardTokens: app.helpRequest.rewardTokens,
             requester: {
                 id: app.helpRequest.requester.id,
                 nickname: app.helpRequest.requester.nickname,
