@@ -69,7 +69,7 @@ export class HelpsController {
  *                   type: object
  *                   nullable: true
  *                   example: null
- *                 success:
+ *                 data:
  *                   type: object
  *                   properties:
  *                     message:
