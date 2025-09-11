@@ -32,6 +32,11 @@ export class ApplyListResponseDto {
             helpTypeText: this._helpTypeText(help.helpType),
             status: help.status,
             statusText: this._helpStatusText(help.status),
+            serviceDate: help.serviceDate,
+            startTime: help.startTime,
+            endTime: help.endTime,
+            addressText: help.addressText,
+            rewardTokens: help.rewardTokens,
         };
 
         // 전체 지원자 수 (페이지네이션 적용 전 총합)
@@ -53,7 +58,7 @@ export class ApplyListResponseDto {
     }
 
     _helpTypeText(type) {
-        const map = { 1: "등하원", 2: "놀이", 3: "동행", 4: "기타" };
+        const map = { 1: "등하원 돌봄", 2: "놀이 돌봄", 3: "동행 돌봄", 4: "기타 돌봄" };
         return map[type] ?? "알 수 없음";
     }
     _helpStatusText(status) {
@@ -73,7 +78,7 @@ export class ApplicantListItemDto {
         this.helper = {
             id: app.helper?.id ?? app.userId,
             nickname: app.helper?.nickname ?? "알수없음",
-            profileImageUrl:
+            imageUrl:
                 app.helper?.imageUrl || app.helper?.kakaoProfileImageUrl || null,
             reviewCount: stats.reviewCount ?? 0,
             ratingAvg: stats.ratingAvg ?? 0,
@@ -101,10 +106,12 @@ export class MyApplicationItemDto {
             serviceDate: app.helpRequest.serviceDate,
             startTime: app.helpRequest.startTime,
             endTime: app.helpRequest.endTime,
+            addressText: app.helpRequest.addressText,
+            rewardTokens: app.helpRequest.rewardTokens,
             requester: {
                 id: app.helpRequest.requester.id,
                 nickname: app.helpRequest.requester.nickname,
-                profileImageUrl:
+                imageUrl:
                     app.helpRequest.requester.imageUrl ||
                     app.helpRequest.requester.kakaoProfileImageUrl ||
                     null,
@@ -120,7 +127,7 @@ export class MyApplicationItemDto {
     }
 
     _helpTypeText(type) {
-        const map = { 1: "등하원", 2: "놀이", 3: "동행", 4: "기타" };
+        const map = { 1: "등하원 돌봄", 2: "놀이 돌봄", 3: "동행 돌봄", 4: "기타 돌봄" };
         return map[type] ?? "알 수 없음";
     }
 }
