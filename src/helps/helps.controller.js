@@ -55,7 +55,7 @@ export class HelpsController {
  *                 format: binary
  *                 description: "첨부 이미지 (선택사항)"
  *     responses:
- *       200:
+ *       201:
  *         description: 돌봄요청 작성 성공
  *         content:
  *           application/json:
@@ -69,7 +69,7 @@ export class HelpsController {
  *                   type: object
  *                   nullable: true
  *                   example: null
- *                 data:
+ *                 success:
  *                   type: object
  *                   properties:
  *                     message:
@@ -95,8 +95,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "서비스 날짜는 오늘 또는 이후여야 합니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -120,8 +120,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "로그인이 필요합니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -145,8 +145,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "돌봄요청 생성 중 오류가 발생했습니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -301,8 +301,8 @@ export class HelpsController {
     *                       type: string
     *                       example: "로그인이 필요합니다."
     *                     data:
-    *                       type: object
     *                       nullable: true
+    *                       example: null
     *                 success:
     *                   nullable: true
     *                   example: null
@@ -326,8 +326,8 @@ export class HelpsController {
     *                       type: string
     *                       example: "해당 돌봄요청을 찾을 수 없습니다."
     *                     data:
-    *                       type: object
     *                       nullable: true
+    *                       example: null
     *                 success:
     *                   nullable: true
     *                   example: null
@@ -451,8 +451,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "서비스 날짜는 오늘 또는 이후여야 합니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -476,8 +476,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "로그인이 필요합니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -501,8 +501,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "자신의 돌봄요청만 수정할 수 있습니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -526,8 +526,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "해당 돌봄요청을 찾을 수 없습니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -551,8 +551,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "돌봄요청 수정 중 오류가 발생했습니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -644,8 +644,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "완료된 돌봄요청은 삭제할 수 없습니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -669,8 +669,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "로그인이 필요합니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -694,8 +694,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "자신의 돌봄요청만 삭제할 수 있습니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -719,8 +719,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "해당 돌봄요청을 찾을 수 없습니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -744,8 +744,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "돌봄요청 삭제 중 오류가 발생했습니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -873,8 +873,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "돌봄요청 조회 중 오류가 발생했습니다."
  *                     data:
- *                       type: object
- *                       example: {}
+ *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -1047,8 +1047,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "로그인이 필요합니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -1072,8 +1072,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "내 돌봄요청 조회 중 오류가 발생했습니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
@@ -1215,8 +1215,8 @@ export class HelpsController {
  *                       type: string
  *                       example: "로그인이 필요합니다."
  *                     data:
- *                       type: object
  *                       nullable: true
+ *                       example: null
  *                 success:
  *                   nullable: true
  *                   example: null
