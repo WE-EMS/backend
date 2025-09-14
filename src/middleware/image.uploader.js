@@ -3,14 +3,7 @@ import multer from "multer";
 import multerS3 from "multer-s3";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-
-// 커스텀 에러 생성 함수
-const createError = (message, statusCode = 400) => {
-    const error = new Error(message);
-    error.statusCode = statusCode;
-    error.errorCode = "FILE_UPLOAD_ERROR";
-    return error;
-};
+import { ApiError } from "./error.js";
 
 const { AWS_REGION, AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_S3_BUCKET_NAME } = process.env;
 
@@ -53,7 +46,11 @@ const createImageUploader = (directory) => {
 
                 // extension 확인
                 if (!allowedExtensions.includes(extension)) {
-                    return callback(createError(`지원하지 않는 파일 확장자입니다. 허용된 확장자: ${allowedExtensions.join(', ')}`, 400));
+                    return callback(new ApiError({
+                        statusCode: 400,
+                        errorCode: "FILE_UPLOAD_ERROR",
+                        reason: `지원하지 않는 파일 확장자입니다. 허용된 확장자: ${allowedExtensions.join(', ')}`
+                    }));
                 }
 
                 // 파일명에서 특수문자 제거 및 안전한 파일명 생성
@@ -78,7 +75,11 @@ const createImageUploader = (directory) => {
             if (allowedMimeTypes.includes(file.mimetype)) {
                 callback(null, true);
             } else {
-                callback(createError(`지원하지 않는 파일 타입입니다. 허용된 타입: ${allowedMimeTypes.join(', ')}`, 400));
+                callback(new ApiError({
+                    statusCode: 400,
+                    errorCode: "FILE_UPLOAD_ERROR",
+                    reason: `지원하지 않는 파일 타입입니다. 허용된 타입: ${allowedMimeTypes.join(', ')}`
+                }));
             }
         }
     });
