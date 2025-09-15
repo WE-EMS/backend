@@ -144,7 +144,7 @@ export class ApplicationsService {
             reviewStatsByUser = stats.reduce((acc, s) => {
                 acc[s.revieweeId] = {
                     reviewCount: s._count?.id ?? 0,
-                    ratingAvg: s._avg?.rating ? Number(s._avg.rating.toFixed(2)) : 0,
+                    avgRating: s._avg?.rating ? Number(s._avg.rating.toFixed(2)) : 0,
                 };
                 return acc;
             }, {});
@@ -303,7 +303,7 @@ export class ApplicationsService {
                 reviewStatsByUser = stats.reduce((acc, s) => {
                     acc[s.revieweeId] = {
                         reviewCount: s._count?.id ?? 0,
-                        ratingAvg: s._avg?.rating ? Number(s._avg.rating.toFixed(2)) : 0,
+                        avgRating: s._avg?.rating ? Number(s._avg.rating.toFixed(2)) : 0,
                     };
                     return acc;
                 }, {});

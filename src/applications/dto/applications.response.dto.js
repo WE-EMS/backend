@@ -44,7 +44,7 @@ export class ApplyListResponseDto {
         this.applicants = applications.map((a) => {
             const stats = reviewStatsByUser[a.userId] || {
                 reviewCount: 0,
-                ratingAvg: 0,
+                avgRating: 0,
             };
             return new ApplicantListItemDto(a, stats);
         });
@@ -81,7 +81,7 @@ export class ApplicantListItemDto {
             imageUrl:
                 app.helper?.imageUrl || app.helper?.kakaoProfileImageUrl || null,
             reviewCount: stats.reviewCount ?? 0,
-            ratingAvg: stats.ratingAvg ?? 0,
+            avgRating: stats.avgRating ?? 0,
         };
     }
 
@@ -116,7 +116,7 @@ export class MyApplicationItemDto {
                     app.helpRequest.requester.kakaoProfileImageUrl ||
                     null,
                 reviewCount: reviewStatsByUser[app.helpRequest.requester.id]?.reviewCount ?? 0,
-                ratingAvg: reviewStatsByUser[app.helpRequest.requester.id]?.ratingAvg ?? 0,
+                avgRating: reviewStatsByUser[app.helpRequest.requester.id]?.avgRating ?? 0,
             },
         };
     }

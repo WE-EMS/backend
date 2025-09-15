@@ -244,7 +244,7 @@ export class ApplicationsController {
          *                           nickname: "염둘"
          *                           imageUrl: null
          *                           reviewCount: 2
-         *                           ratingAvg: 5
+         *                           avgRating: 5
          *                     pagination:
          *                       page: 1
          *                       totalPages: 1
@@ -619,7 +619,7 @@ export class ApplicationsController {
      *                         nickname: "김엄마"
      *                         imageUrl: "https://example.com/profile.jpg"
      *                         reviewCount: 12
-     *                         ratingAvg: 4.8
+     *                         avgRating: 4.8
      *                 pagination:
      *                   page: 1
      *                   totalPages: 3
