@@ -1,4 +1,5 @@
 import { helpsService } from "./helps.service.js";
+import { ApiError, unauthorized, internalError } from "../middleware/error.js";
 
 export class HelpsController {
     /**
@@ -153,13 +154,7 @@ export class HelpsController {
  */
     async createHelpRequest(req, res, next) {
         try {
-            if (!req.user) {
-                return res.error({
-                    errorCode: "UNAUTHORIZED",
-                    reason: "로그인이 필요합니다.",
-                    statusCode: 401
-                });
-            }
+            if (!req.user) throw unauthorized();
 
             const created = await helpsService.createHelpRequest(
                 req.body,
@@ -175,7 +170,7 @@ export class HelpsController {
                 }
             });
         } catch (error) {
-            next(error);
+            next(internalError(error.message, "CREATE_ERROR"));
         }
     }
 
@@ -334,18 +329,13 @@ export class HelpsController {
     */
     async getHelpRequestById(req, res, next) {
         try {
-            if (!req.user) {
-                return res.error({
-                    errorCode: "UNAUTHORIZED",
-                    reason: "로그인이 필요합니다.",
-                    statusCode: 401
-                });
-            }
+            if (!req.user) throw unauthorized();
+
             const { helpId } = req.params;
             const result = await helpsService.getHelpRequestById(helpId);
             res.success(result);
         } catch (error) {
-            next(error);
+            next(internalError(error.message, "DELETE_ERROR"));
         }
     }
 
@@ -559,13 +549,7 @@ export class HelpsController {
  */
     async updateHelpRequest(req, res, next) {
         try {
-            if (!req.user) {
-                return res.error({
-                    errorCode: "UNAUTHORIZED",
-                    reason: "로그인이 필요합니다.",
-                    statusCode: 401
-                });
-            }
+            if (!req.user) throw unauthorized();
 
             const { helpId } = req.params;
             await helpsService.updateHelpRequest(
@@ -583,7 +567,7 @@ export class HelpsController {
                 }
             });
         } catch (error) {
-            next(error);
+            next(internalError(error.message, "UPDATE_ERROR"));
         }
     }
 
@@ -752,19 +736,13 @@ export class HelpsController {
  */
     async deleteHelpRequest(req, res, next) {
         try {
-            if (!req.user) {
-                return res.error({
-                    errorCode: "UNAUTHORIZED",
-                    reason: "로그인이 필요합니다.",
-                    statusCode: 401
-                });
-            }
+            if (!req.user) throw unauthorized();
 
             const { helpId } = req.params;
             const result = await helpsService.deleteHelpRequest(helpId, req.user.id);
             res.success(result);
         } catch (error) {
-            next(error);
+            next(internalError(error.message, "DELETE_ERROR"));
         }
     }
 
@@ -908,15 +886,7 @@ export class HelpsController {
                 }
             });
         } catch (error) {
-            return res.status(500).json({
-                resultType: "FAIL",
-                error: {
-                    errorCode: "UPDATE_ERROR",
-                    reason: "돌봄요청 조회 중 오류가 발생했습니다.",
-                    data: {}
-                },
-                success: null
-            });
+            next(internalError(error.message, "FETCH_ERROR"));
         }
     }
 
@@ -1080,13 +1050,7 @@ export class HelpsController {
  */
     async getMyHelpRequests(req, res, next) {
         try {
-            if (!req.user) {
-                return res.error({
-                    errorCode: "UNAUTHORIZED",
-                    reason: "로그인이 필요합니다.",
-                    statusCode: 401
-                });
-            }
+            if (!req.user) throw unauthorized();
 
             const page = parseInt(req.query.page ?? "1");
             const size = parseInt(req.query.size ?? "10");
@@ -1106,7 +1070,7 @@ export class HelpsController {
                 }
             });
         } catch (error) {
-            next(error);
+            next(internalError(error.message, "FETCH_ERROR"));
         }
     }
 
@@ -1223,13 +1187,7 @@ export class HelpsController {
  */
     async getMyCompleteHelps(req, res, next) {
         try {
-            if (!req.user) {
-                return res.error({
-                    errorCode: "UNAUTHORIZED",
-                    reason: "로그인이 필요합니다.",
-                    statusCode: 401
-                });
-            }
+            if (!req.user) throw unauthorized();
 
             const page = parseInt(req.query.page ?? "1");
             const size = parseInt(req.query.size ?? "10");
@@ -1249,7 +1207,7 @@ export class HelpsController {
                 }
             });
         } catch (error) {
-            next(error);
+            next(internalError(error.message, "FETCH_ERROR"));
         }
     }
 }

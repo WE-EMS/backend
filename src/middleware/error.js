@@ -52,3 +52,31 @@ export const notFoundHandler = (req, res) => {
         success: null,
     });
 };
+
+// 4XX
+export const unauthorized = (reason = "로그인이 필요합니다.") =>
+    new ApiError({ statusCode: 401, errorCode: "UNAUTHORIZED", reason });
+
+export const forbidden = (reason = "권한이 없습니다.") =>
+    new ApiError({ statusCode: 403, errorCode: "FORBIDDEN", reason });
+
+export const notFound = (reason = "리소스를 찾을 수 없습니다.") =>
+    new ApiError({ statusCode: 404, errorCode: "NOT_FOUND", reason });
+
+export const conflict = (reason = "충돌이 발생했습니다.") =>
+    new ApiError({ statusCode: 409, errorCode: "CONFLICT", reason });
+
+export const badRequest = (reason = "잘못된 요청입니다.") =>
+    new ApiError({ statusCode: 400, errorCode: "BAD_REQUEST", reason });
+
+// 5XX
+export const internalError = (reason = "서버 내부 오류", errorCode = "INTERNAL_SERVER_ERROR") =>
+    new ApiError({ statusCode: 500, errorCode, reason });
+
+// try/catch 없애는 비동기 래퍼
+export const asyncHandler = (fn) => (req, res, next) =>
+    Promise.resolve(fn(req, res, next)).catch(next);
+
+// 공통 인증 가드 (필요한 라우트에서만 사용)
+export const authRequired = (req, res, next) =>
+    req.user ? next() : next(unauthorized());

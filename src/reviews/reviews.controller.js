@@ -152,11 +152,7 @@ export const reviewController = {
             });
             return res.status(201).json({ resultType: 'SUCCESS', error: null, success: new ReviewResponseDto(data) });
         } catch (e) {
-            return res.status(e.status || 400).json({
-                resultType: 'FAIL',
-                error: { errorCode: e.code || 'BAD_REQUEST', reason: e.message, data: null },
-                success: null,
-            });
+            next(internalError(e.message, e.code || "UPDATE_ERROR"));
         }
     },
 
@@ -356,11 +352,7 @@ export const reviewController = {
             });
             return res.status(201).json({ resultType: 'SUCCESS', error: null, success: new ReviewResponseDto(data) });
         } catch (e) {
-            return res.status(e.status || 400).json({
-                resultType: 'FAIL',
-                error: { errorCode: e.code || 'BAD_REQUEST', reason: e.message, data: null },
-                success: null,
-            });
+            next(internalError(e.message, e.code || "UPDATE_ERROR"));
         }
     },
 
@@ -379,11 +371,7 @@ export const reviewController = {
             const { affectedCount } = await reviewService.autoCompleteHelps();
             return res.status(200).json({ resultType: 'SUCCESS', error: null, success: { affectedCount } });
         } catch (e) {
-            return res.status(e.status || 500).json({
-                resultType: 'FAIL',
-                error: { errorCode: e.code || 'FETCH_ERROR', reason: e.message, data: null },
-                success: null,
-            });
+            next(internalError(e.message, e.code || "UPDATE_ERROR"));
         }
     },
 
@@ -471,11 +459,7 @@ export const reviewController = {
                 }
             });
         } catch (e) {
-            return res.status(e.status || 400).json({
-                resultType: 'FAIL',
-                error: { errorCode: e.code || 'BAD_REQUEST', reason: e.message, data: null },
-                success: null,
-            });
+            next(internalError(e.message, e.code || "FETCH_ERROR"));
         }
     },
 
@@ -534,11 +518,7 @@ export const reviewController = {
                 }
             });
         } catch (e) {
-            return res.status(e.status || 400).json({
-                resultType: 'FAIL',
-                error: { errorCode: e.code || 'BAD_REQUEST', reason: e.message, data: null },
-                success: null,
-            });
+            next(internalError(e.message, e.code || "FETCH_ERROR"));
         }
     },
 
@@ -597,11 +577,7 @@ export const reviewController = {
                 }
             });
         } catch (e) {
-            return res.status(e.status || 400).json({
-                resultType: 'FAIL',
-                error: { errorCode: e.code || 'BAD_REQUEST', reason: e.message, data: null },
-                success: null,
-            });
+            next(internalError(e.message, e.code || "FETCH_ERROR"));
         }
     },
 };

@@ -268,12 +268,9 @@ app.get("/", (req, res) => {
     }
 });
 
-// 업로드 관련 라우트들 뒤에 위치시키기
-app.use(multerErrorHandler);
-// 전역 오류 처리
-app.use(errorHandler);
-// 404
-app.use(notFoundHandler);
+app.use(notFoundHandler);       // 404
+app.use(multerErrorHandler);    // multer
+app.use(errorHandler);          // 전역 오류 처리
 
 // 배치 스케줄러
 scheduleCloseExpiredHelps();
