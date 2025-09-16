@@ -988,6 +988,9 @@ export class HelpsController {
  *                               avgRating:
  *                                 type: number
  *                                 example: 4.8
+ *                               message:
+ *                                 type: string
+ *                                 example: 졸리다 민콩아 파이팅
  *                     pagination:
  *                       type: object
  *                       properties:

@@ -168,7 +168,8 @@ export class MyHelpRequestListItemDto {
                 nickname: helper.nickname,
                 imageUrl: helper.imageUrl || helper.kakaoProfileImageUrl,
                 reviewCount: reviewCount,
-                avgRating: avgRating
+                avgRating: avgRating,
+                message: helpRequest.assignment.application?.message ?? null
             };
         }
     }
