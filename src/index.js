@@ -2,8 +2,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import cookieParser from "cookie-parser";
-import multer from "multer";
-import { prisma } from "./db.config.js";
 import swaggerUiExpress from "swagger-ui-express";
 import { swaggerSpec } from "./swagger/swaggerSpec.js";
 import { scheduleCloseExpiredHelps } from "./jobs/close-expired-helps.job.js";
@@ -22,6 +20,9 @@ import { injectUser } from "./auth/auth.middleware.js";
 import { usersRoutes } from "./users/users.route.js";
 import { helpsRoutes } from "./helps/helps.route.js";
 import { reviewsRoutes } from "./reviews/reviews.route.js";
+
+// 에러 미들웨어
+import { multerErrorHandler, errorHandler, notFoundHandler } from "./middleware/error.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -267,60 +268,9 @@ app.get("/", (req, res) => {
     }
 });
 
-// Multer 에러 처리 미들웨어
-app.use((err, req, res, next) => {
-    if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-            return res.error({
-                errorCode: "FILE_TOO_LARGE",
-                reason: "파일 크기가 5MB를 초과합니다.",
-                statusCode: 413
-            });
-        }
-        if (err.code === 'LIMIT_FILE_COUNT') {
-            return res.error({
-                errorCode: "TOO_MANY_FILES",
-                reason: "한 번에 하나의 파일만 업로드할 수 있습니다.",
-                statusCode: 400
-            });
-        }
-        if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-            return res.error({
-                errorCode: "UNEXPECTED_FILE",
-                reason: "예상하지 못한 파일 필드입니다. 'image' 필드를 사용하세요.",
-                statusCode: 400
-            });
-        }
-    }
-    next(err);
-});
-
-// 전역 오류 처리
-app.use((err, req, res, next) => {
-    if (res.headersSent) return next(err);
-
-    const statusCode = err.statusCode || 500;
-    const errorCode = err.errorCode || "INTERNAL_SERVER_ERROR";
-    const reason = err.reason || err.message || "서버에서 오류가 발생했습니다.";
-    const data = err.data || null;
-
-    console.error("Global error handler:", err);
-
-    return res.status(statusCode).json({
-        resultType: "FAIL",
-        error: { errorCode, reason, data },
-        success: null,
-    });
-});
-
-// 404 처리
-app.use((req, res) => {
-    res.status(404).json({
-        resultType: "FAIL",
-        error: { errorCode: "NOT_FOUND", reason: "요청한 리소스를 찾을 수 없습니다.", data: null },
-        success: null,
-    });
-});
+app.use(notFoundHandler);       // 404
+app.use(multerErrorHandler);    // multer
+app.use(errorHandler);          // 전역 오류 처리
 
 // 배치 스케줄러
 scheduleCloseExpiredHelps();

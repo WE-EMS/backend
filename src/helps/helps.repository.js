@@ -178,6 +178,9 @@ export class HelpsRepository {
                                         select: { rating: true }
                                     }
                                 }
+                            },
+                            application: {
+                                select: { message: true }
                             }
                         }
                     }

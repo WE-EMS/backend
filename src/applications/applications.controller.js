@@ -1,4 +1,5 @@
 import { applicationsService } from "./applications.service.js";
+import { ApiError, unauthorized } from "../middleware/error.js";
 
 export class ApplicationsController {
     /**
@@ -134,13 +135,8 @@ export class ApplicationsController {
  */
     async apply(req, res, next) {
         try {
-            if (!req.user) {
-                return res.error({
-                    errorCode: "UNAUTHORIZED",
-                    reason: "로그인이 필요합니다.",
-                    statusCode: 401,
-                });
-            }
+            if (!req.user) throw unauthorized();
+
             const { helpId } = req.params;
             const helperId = req.user.id;
 
@@ -158,7 +154,7 @@ export class ApplicationsController {
                 }
             });
         } catch (err) {
-            next(err);
+            next(internalError(err.message, "CREATE_ERROR"));
         }
     }
 
@@ -244,7 +240,7 @@ export class ApplicationsController {
          *                           nickname: "염둘"
          *                           imageUrl: null
          *                           reviewCount: 2
-         *                           ratingAvg: 5
+         *                           avgRating: 5
          *                     pagination:
          *                       page: 1
          *                       totalPages: 1
@@ -294,13 +290,7 @@ export class ApplicationsController {
          *               success: null
          */
         try {
-            if (!req.user) {
-                return res.error({
-                    errorCode: "UNAUTHORIZED",
-                    reason: "로그인이 필요합니다.",
-                    statusCode: 401,
-                });
-            }
+            if (!req.user) throw unauthorized();
 
             const { helpId } = req.params;
             const requesterId = req.user.id;
@@ -316,7 +306,7 @@ export class ApplicationsController {
                 success: data,
             });
         } catch (err) {
-            next(err);
+            next(internalError(err.message, "FETCH_ERROR"));
         }
     }
 
@@ -417,13 +407,7 @@ export class ApplicationsController {
    */
     async acceptOrReject(req, res, next) {
         try {
-            if (!req.user) {
-                return res.error({
-                    errorCode: "UNAUTHORIZED",
-                    reason: "로그인이 필요합니다.",
-                    statusCode: 401,
-                });
-            }
+            if (!req.user) throw unauthorized();
 
             const { helpId } = req.params;
             const requesterId = req.user.id;
@@ -440,7 +424,7 @@ export class ApplicationsController {
                 data,
             });
         } catch (err) {
-            next(err);
+            next(internalError(err.message, "UPDATE_ERROR"));
         }
     }
 
@@ -549,13 +533,7 @@ export class ApplicationsController {
    */
     async helperKick(req, res, next) {
         try {
-            if (!req.user) {
-                return res.error({
-                    errorCode: "UNAUTHORIZED",
-                    reason: "로그인이 필요합니다.",
-                    statusCode: 401,
-                });
-            }
+            if (!req.user) throw unauthorized();
 
             const { helpId } = req.params;
             const requesterId = req.user.id;
@@ -568,7 +546,7 @@ export class ApplicationsController {
                 data,
             });
         } catch (err) {
-            next(err);
+            next(internalError(err.message, "UPDATE_ERROR"));
         }
     }
 
@@ -619,7 +597,7 @@ export class ApplicationsController {
      *                         nickname: "김엄마"
      *                         imageUrl: "https://example.com/profile.jpg"
      *                         reviewCount: 12
-     *                         ratingAvg: 4.8
+     *                         avgRating: 4.8
      *                 pagination:
      *                   page: 1
      *                   totalPages: 3
@@ -647,13 +625,7 @@ export class ApplicationsController {
      *               success: null
  */
         try {
-            if (!req.user) {
-                return res.error({
-                    errorCode: "UNAUTHORIZED",
-                    reason: "로그인이 필요합니다.",
-                    statusCode: 401,
-                });
-            }
+            if (!req.user) throw unauthorized();
 
             const userId = req.user.id;
             const page = parseInt(req.query.page) || 1;
@@ -667,7 +639,7 @@ export class ApplicationsController {
                 success: data,
             });
         } catch (err) {
-            next(err);
+            next(internalError(err.message, "FETCH_ERROR"));
         }
     }
 }
